@@ -34,4 +34,4 @@ repos:
     experiments:
         enabled: false
     fullsend:
-        enabled: false
+        enabled: true
