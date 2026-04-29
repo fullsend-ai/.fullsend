@@ -32,6 +32,6 @@ repos:
     .fullsend:
         enabled: false
     experiments:
-        enabled: false
+        enabled: true
     fullsend:
         enabled: true
