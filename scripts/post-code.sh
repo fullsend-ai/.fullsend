@@ -183,7 +183,7 @@ fi
 echo "Creating PR..."
 
 COMMIT_SUBJECT="$(git log -1 --format='%s' HEAD)"
-COMMIT_BODY_RAW="$(git log -1 --format='%b' HEAD | sed '/^Signed-off-by:/d' | sed -e :a -e '/^\n*$/{ $d; N; ba; }')"
+COMMIT_BODY_RAW="$(git log -1 --format='%b' HEAD | sed '/^Signed-off-by:/d' | sed '/^Closes #/d' | sed -e :a -e '/^\n*$/{ $d; N; ba; }')"
 
 COMMIT_BODY="$(echo "${COMMIT_BODY_RAW}" | awk '
   /^$/           { if (buf) print buf; print; buf=""; next }
@@ -212,20 +212,10 @@ else
   PR_TITLE="${COMMIT_SUBJECT}"
 fi
 
-FILE_SUMMARY="$(echo "${CHANGED_FILES}" | sort | sed 's|^|  - `|; s|$|`|')"
-
 if [ -z "${COMMIT_BODY}" ]; then
-  DESCRIPTION="Automated implementation for issue #${ISSUE_NUMBER}.
-
-### Changed files
-
-${FILE_SUMMARY}"
+  DESCRIPTION="Automated implementation for issue #${ISSUE_NUMBER}."
 else
-  DESCRIPTION="${COMMIT_BODY}
-
-### Changed files
-
-${FILE_SUMMARY}"
+  DESCRIPTION="${COMMIT_BODY}"
 fi
 
 PR_BODY="${DESCRIPTION}
@@ -239,9 +229,7 @@ Closes #${ISSUE_NUMBER}
 - [x] Branch is not main/master (\`${BRANCH}\`)
 - [x] Secret scan passed (gitleaks — \`${SCAN_RANGE}\`)
 - [x] Pre-commit hooks passed (authoritative run on runner)
-- [x] Tests ran inside sandbox
-
-<sub>Created by <a href=\"https://github.com/fullsend-ai/fullsend\">fullsend</a> code agent</sub>"
+- [x] Tests ran inside sandbox"
 
 PR_URL="$(gh pr create \
   --repo "${REPO_FULL_NAME}" \
