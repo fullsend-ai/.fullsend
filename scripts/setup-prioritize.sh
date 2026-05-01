@@ -40,7 +40,7 @@ for field_name in "RICE Reach" "RICE Impact" "RICE Confidence" "RICE Effort" "RI
           dataType: NUMBER
           name: $name
         }) {
-          projectV2Field { id name }
+          projectV2Field { ... on ProjectV2Field { id name } }
         }
       }
     ' -f projectId="${PROJECT_ID}" -f name="${field_name}"
