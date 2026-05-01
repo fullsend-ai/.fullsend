@@ -75,6 +75,9 @@ jobs:
           PRIORITIZE_STALE_THRESHOLD: 7d
         run: bash .github/scripts/setup-agent-env.sh
 
+      - name: Create empty target-repo directory
+        run: mkdir -p target-repo
+
       - name: Run prioritize agent
         uses: ./.github/actions/fullsend
         with:
