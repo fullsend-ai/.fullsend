@@ -15,6 +15,8 @@ host_files:
   - src: env/prioritize.env
     dest: /tmp/workspace/.env.d/prioritize.env
     expand: true
+  - src: /tmp/pre-prioritize-output.env
+    dest: /tmp/workspace/.env.d/pre-prioritize-output.env
 
 skills:
   - skills/customer-research

@@ -100,6 +100,7 @@ UNSCORED_URL=$(echo "${ITEMS_JSON}" | jq -r --arg fid "${SCORE_FIELD_ID}" '
 if [[ -n "${UNSCORED_URL}" && "${UNSCORED_URL}" != "null" ]]; then
   echo "Found unscored issue: ${UNSCORED_URL}"
   echo "GITHUB_ISSUE_URL=${UNSCORED_URL}" >> "${GITHUB_ENV:-/dev/null}"
+  echo "export GITHUB_ISSUE_URL=\"${UNSCORED_URL}\"" > /tmp/pre-prioritize-output.env
   export GITHUB_ISSUE_URL="${UNSCORED_URL}"
   exit 0
 fi
@@ -141,5 +142,6 @@ fi
 
 echo "Found stale score ($(( AGE_SECONDS / 86400 ))d old): ${OLDEST_URL}"
 echo "GITHUB_ISSUE_URL=${OLDEST_URL}" >> "${GITHUB_ENV:-/dev/null}"
+echo "export GITHUB_ISSUE_URL=\"${OLDEST_URL}\"" > /tmp/pre-prioritize-output.env
 export GITHUB_ISSUE_URL="${OLDEST_URL}"
 exit 0
