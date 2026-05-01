@@ -12,6 +12,13 @@
 
 set -euo pipefail
 
+# Source issue URL from pre-script output (fullsend doesn't propagate
+# pre-script env exports to the post-script process).
+if [[ -f /tmp/pre-prioritize-output.env ]]; then
+  # shellcheck disable=SC1091
+  source /tmp/pre-prioritize-output.env
+fi
+
 : "${GITHUB_ISSUE_URL:?GITHUB_ISSUE_URL must be set}"
 : "${GH_TOKEN:?GH_TOKEN must be set}"
 : "${ORG:?ORG must be set}"
