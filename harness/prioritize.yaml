@@ -32,7 +32,7 @@ runner_env:
   GH_TOKEN: ${GH_TOKEN}
   ORG: ${ORG}
   PROJECT_NUMBER: ${PROJECT_NUMBER}
-  STALE_THRESHOLD: ${STALE_THRESHOLD:-7d}
+  STALE_THRESHOLD: ${STALE_THRESHOLD}
   FULLSEND_OUTPUT_SCHEMA: ${FULLSEND_DIR}/schemas/prioritize-result.schema.json
 
 timeout_minutes: 10
