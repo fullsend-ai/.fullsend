@@ -179,7 +179,10 @@ echo "Board reranked by RICE Score."
 
 COMMENT=$(cat <<COMMENT_EOF
 <!-- fullsend:prioritize-agent -->
-## RICE Priority Score: ${SCORE}
+**RICE Priority Score: ${SCORE}**
+
+<details>
+<summary>Score breakdown</summary>
 
 | Dimension | Score | Reasoning |
 |-----------|-------|-----------|
@@ -189,6 +192,8 @@ COMMENT=$(cat <<COMMENT_EOF
 | **Effort** | ${EFFORT} | ${REASONING_EFFORT} |
 
 **Formula:** (${REACH} × ${IMPACT} × ${CONFIDENCE}) / ${EFFORT} = **${SCORE}**
+
+</details>
 COMMENT_EOF
 )
 
