@@ -80,6 +80,34 @@ the `appdumpster` org and were not in the original plan:
    board number (e.g., `1`). The scaffold should document this as a
    required setup step.
 
+8. **Pre-script → sandbox env passing requires a file-based
+   workaround.** The fullsend binary does not propagate pre-script
+   `export` statements or `GITHUB_ENV` writes to the sandbox or
+   post-script. The pre-script must write an env file (e.g.,
+   `/tmp/pre-prioritize-output.env`) containing `export VAR=value`
+   lines, which is then:
+   - Mounted into the sandbox as a `host_file` (→ `.env.d/` →
+     auto-sourced) so the agent sees it.
+   - Explicitly sourced at the top of the post-script so it has the
+     values too.
+   The `host_file` entry needs `optional: true` since the file
+   doesn't exist until the pre-script creates it. The workflow must
+   `touch` the file before `fullsend run` because
+   `ValidateFilesExist()` doesn't respect `optional` for literal
+   paths. `GITHUB_ISSUE_URL` must NOT appear in `env/prioritize.env`
+   or `runner_env` — only in the pre-script output file — otherwise
+   the placeholder value overwrites the real one due to `.env.d`
+   alphabetical sourcing order. Consider adding first-class
+   pre-script output support to the fullsend binary
+   (`fullsend-ai/fullsend`) to eliminate these workarounds.
+
+9. **Org-scoped agents need an empty `target-repo` directory.** The
+   composite action always passes `--target-repo` to `fullsend run`,
+   which requires the directory to exist. Org-scoped agents that
+   don't operate on a repo checkout need `mkdir -p target-repo` in
+   the workflow. Consider adding a `target_repo: false` option to
+   the harness or composite action.
+
 ---
 
 ### Task 1: JSON Schema for agent output
