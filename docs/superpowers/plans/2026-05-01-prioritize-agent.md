@@ -54,6 +54,22 @@ the `appdumpster` org and were not in the original plan:
    rather than cancel (the pre-script's exit 78 handles the
    nothing-to-do case gracefully).
 
+### Notes for final implementation in fullsend-ai/fullsend
+
+6. **Dedicated GitHub App for prioritize.** The prototype reuses the
+   triage app (`FULLSEND_TRIAGE_CLIENT_ID` /
+   `FULLSEND_TRIAGE_APP_PRIVATE_KEY`). The final implementation
+   should create a dedicated `fullsend-ai-prioritize` GitHub App
+   with the minimum required permissions: `Organization projects:
+   read/write` (for reading/writing RICE fields and reranking) and
+   `Issues: write` (for posting reasoning comments). The triage app
+   needs temporary `project` scope added for the prototype to work.
+
+7. **`FULLSEND_PROJECT_NUMBER` Actions variable.** Must be set on the
+   `.fullsend` repo (or org-level). Value is the GitHub Projects V2
+   board number (e.g., `1`). The scaffold should document this as a
+   required setup step.
+
 ---
 
 ### Task 1: JSON Schema for agent output
