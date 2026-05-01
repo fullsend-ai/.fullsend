@@ -28,7 +28,6 @@ validation_loop:
 post_script: scripts/post-prioritize.sh
 
 runner_env:
-  GITHUB_ISSUE_URL: ${GITHUB_ISSUE_URL}
   GH_TOKEN: ${GH_TOKEN}
   ORG: ${ORG}
   PROJECT_NUMBER: ${PROJECT_NUMBER}

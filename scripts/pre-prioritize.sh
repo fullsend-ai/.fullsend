@@ -86,15 +86,16 @@ ITEMS_JSON=$(gh api graphql -f query='
 
 # Find the first open issue with no RICE Score.
 UNSCORED_URL=$(echo "${ITEMS_JSON}" | jq -r --arg fid "${SCORE_FIELD_ID}" '
-  .data.node.items.nodes[]
-  | select(.content.state == "OPEN")
-  | select(
-      [.fieldValues.nodes[]
-       | select(.field.id == $fid)
-      ] | length == 0
-    )
-  | .content.url
-' | head -1)
+  [.data.node.items.nodes[]
+   | select(.content.state == "OPEN")
+   | select(
+       [.fieldValues.nodes[]
+        | select(.field.id == $fid)
+       ] | length == 0
+     )
+   | .content.url
+  ] | first // empty
+')
 
 if [[ -n "${UNSCORED_URL}" && "${UNSCORED_URL}" != "null" ]]; then
   echo "Found unscored issue: ${UNSCORED_URL}"
