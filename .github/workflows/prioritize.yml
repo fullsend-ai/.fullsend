@@ -73,6 +73,7 @@ jobs:
           PRIORITIZE_ANTHROPIC_VERTEX_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
           PRIORITIZE_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
           PRIORITIZE_STALE_THRESHOLD: 7d
+          PRIORITIZE_GITHUB_ISSUE_URL: pending
         run: bash .github/scripts/setup-agent-env.sh
 
       - name: Run prioritize agent
