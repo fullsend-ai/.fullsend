@@ -107,18 +107,12 @@ SCORE_FIELD_ID=$(get_field_id "RICE Score")
 update_field() {
   local field_id="$1"
   local value="$2"
-  gh api graphql -f query='
-    mutation($projectId: ID!, $itemId: ID!, $fieldId: ID!, $value: Float!) {
-      updateProjectV2ItemFieldValue(input: {
-        projectId: $projectId
-        itemId: $itemId
-        fieldId: $fieldId
-        value: { number: $value }
-      }) {
-        projectV2Item { id }
-      }
-    }
-  ' -f projectId="${PROJECT_ID}" -f itemId="${ITEM_ID}" -f fieldId="${field_id}" -F value="${value}"
+  gh api graphql --input - <<GRAPHQL_EOF
+{
+  "query": "mutation(\$projectId: ID!, \$itemId: ID!, \$fieldId: ID!, \$value: Float!) { updateProjectV2ItemFieldValue(input: { projectId: \$projectId, itemId: \$itemId, fieldId: \$fieldId, value: { number: \$value } }) { projectV2Item { id } } }",
+  "variables": $(jq -n --arg pid "${PROJECT_ID}" --arg iid "${ITEM_ID}" --arg fid "${field_id}" --argjson val "${value}" '{projectId: $pid, itemId: $iid, fieldId: $fid, value: $val}')
+}
+GRAPHQL_EOF
 }
 
 echo "Writing scores to project board..."
