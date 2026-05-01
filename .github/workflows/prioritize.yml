@@ -76,8 +76,10 @@ jobs:
           PRIORITIZE_GITHUB_ISSUE_URL: pre-script-pending
         run: bash .github/scripts/setup-agent-env.sh
 
-      - name: Create empty target-repo directory
-        run: mkdir -p target-repo
+      - name: Create empty target-repo directory and pre-script output placeholder
+        run: |
+          mkdir -p target-repo
+          touch /tmp/pre-prioritize-output.env
 
       - name: Run prioritize agent
         uses: ./.github/actions/fullsend
