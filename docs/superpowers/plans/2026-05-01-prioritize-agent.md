@@ -42,6 +42,18 @@ the `appdumpster` org and were not in the original plan:
    Click "Score breakdown" to expand the per-dimension table. Reduces
    comment noise on issues.
 
+5. **Scheduled GitHub Actions workflow.** Added
+   `.github/workflows/prioritize.yml` with a `schedule` cron trigger
+   running every 10 minutes. This is the first scheduled workflow in
+   the project — all other agents are event-driven
+   (`workflow_dispatch`). The workflow uses `FULLSEND_PROJECT_NUMBER`
+   (Actions variable) and `FULLSEND_PRIORITIZE_CLIENT_ID` /
+   `FULLSEND_PRIORITIZE_APP_PRIVATE_KEY` (secret) for auth. The
+   `ORG` is derived from `github.repository_owner`. Concurrency is
+   set to `cancel-in-progress: false` so overlapping runs queue
+   rather than cancel (the pre-script's exit 78 handles the
+   nothing-to-do case gracefully).
+
 ---
 
 ### Task 1: JSON Schema for agent output

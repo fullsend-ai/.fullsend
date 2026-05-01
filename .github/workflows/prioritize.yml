@@ -1,0 +1,79 @@
+# fullsend-stage: prioritize
+name: Prioritize
+
+on:
+  schedule:
+    - cron: '*/10 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: fullsend-prioritize
+  cancel-in-progress: false
+
+jobs:
+  prioritize:
+    name: Prioritize
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+      issues: write
+
+    steps:
+      - name: Checkout .fullsend repository
+        uses: actions/checkout@v6
+
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.FULLSEND_PRIORITIZE_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_PRIORITIZE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Authenticate to Google Cloud (WIF)
+        if: vars.FULLSEND_GCP_AUTH_MODE == 'wif'
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+          service_account: ${{ secrets.FULLSEND_GCP_WIF_SA_EMAIL }}
+
+      - name: Authenticate to Google Cloud (SA key)
+        if: vars.FULLSEND_GCP_AUTH_MODE != 'wif'
+        uses: google-github-actions/auth@v3
+        with:
+          credentials_json: ${{ secrets.FULLSEND_GCP_SA_KEY_JSON }}
+
+      - name: Set GCP_OIDC_TOKEN_FILE for non-WIF
+        if: vars.FULLSEND_GCP_AUTH_MODE != 'wif'
+        run: |
+          touch "$RUNNER_TEMP/empty-oidc-token"
+          echo "GCP_OIDC_TOKEN_FILE=$RUNNER_TEMP/empty-oidc-token" >> "${GITHUB_ENV}"
+
+      - name: Mask GCP credential file paths
+        run: |
+          for var in GOOGLE_GHA_CREDS_PATH GOOGLE_APPLICATION_CREDENTIALS CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE; do
+            val="${!var:-}"
+            if [[ -n "${val}" ]]; then
+              echo "::add-mask::${val}"
+            fi
+          done
+
+      - name: Prepare sandbox credentials
+        run: bash scripts/prepare-sandbox-credentials.sh
+
+      - name: Setup agent environment
+        env:
+          AGENT_PREFIX: PRIORITIZE_
+          PRIORITIZE_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PRIORITIZE_ORG: ${{ github.repository_owner }}
+          PRIORITIZE_PROJECT_NUMBER: ${{ vars.FULLSEND_PROJECT_NUMBER }}
+          PRIORITIZE_ANTHROPIC_VERTEX_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+          PRIORITIZE_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
+        run: bash .github/scripts/setup-agent-env.sh
+
+      - name: Run prioritize agent
+        uses: ./.github/actions/fullsend
+        with:
+          agent: prioritize
