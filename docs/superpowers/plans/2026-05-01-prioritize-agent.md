@@ -65,6 +65,16 @@ the `appdumpster` org and were not in the original plan:
    `Issues: write` (for posting reasoning comments). The triage app
    needs temporary `project` scope added for the prototype to work.
 
+   **Important: Projects V2 requires _Organization_ permissions, not
+   _Repository_ permissions.** The GitHub App must request
+   **Organization permissions → Projects → Read & write**. The
+   similarly-named **Repository permissions → Projects** controls
+   the legacy classic projects and does not grant access to Projects
+   V2 GraphQL APIs (`ProjectV2`, `updateProjectV2ItemFieldValue`,
+   etc.). The installer/setup script must explicitly request the
+   organization-level permission or the post-script will get HTTP 404
+   when trying to read/write project fields.
+
 7. **`FULLSEND_PROJECT_NUMBER` Actions variable.** Must be set on the
    `.fullsend` repo (or org-level). Value is the GitHub Projects V2
    board number (e.g., `1`). The scaffold should document this as a
