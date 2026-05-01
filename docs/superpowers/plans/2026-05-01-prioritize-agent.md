@@ -10,6 +10,38 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-01-prioritize-agent-design.md`
 
+## Post-Implementation Changes
+
+The following changes were discovered during functional testing against
+the `appdumpster` org and were not in the original plan:
+
+### Bug fixes found during testing
+
+1. **Setup script: GraphQL union type fix.** The `createProjectV2Field`
+   mutation returns a `ProjectV2FieldConfiguration` union type.
+   Selecting `id` and `name` directly fails — changed to use an inline
+   fragment: `... on ProjectV2Field { id name }`.
+
+2. **Post-script: Float coercion fix.** The `gh` CLI's `-F` flag does
+   not reliably coerce string values like `"1.0"` to GraphQL `Float`.
+   Switched to `gh api graphql --input -` with `jq`-built JSON
+   variables to ensure proper numeric typing.
+
+### Features added during testing
+
+3. **Board reranking by RICE Score.** After writing scores, the
+   post-script now fetches all project items with their RICE Score
+   values, sorts them descending (nulls at bottom), and repositions
+   them using `updateProjectV2ItemPosition`. Higher scores float to the
+   top of the board. This was not in the original spec or plan but is
+   essential for the board to be useful as a prioritized view.
+
+4. **Collapsed comment with `<details>`/`<summary>`.** The RICE
+   reasoning comment now uses an HTML details dropdown. Only the score
+   headline (**RICE Priority Score: X.XX**) is visible by default.
+   Click "Score breakdown" to expand the per-dimension table. Reduces
+   comment noise on issues.
+
 ---
 
 ### Task 1: JSON Schema for agent output
