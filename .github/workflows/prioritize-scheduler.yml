@@ -2,9 +2,11 @@
 name: Prioritize Scheduler
 
 on:
-  # Enabled directly on our installed .fullsend repo for the fullsend-ai org.
-  schedule:
-    - cron: '*/10 * * * *'
+  # TODO: Re-enable once we have a first-class way to enable/disable
+  # schedule-based agents per org. Until then, keep commented out to avoid
+  # noisy Action runs in orgs that haven't configured the prioritize agent.
+  # schedule:
+  #   - cron: '*/10 * * * *'
   workflow_dispatch:
 
 concurrency:
@@ -19,19 +21,19 @@ jobs:
     permissions:
       actions: write
       contents: read
+      id-token: write
 
     steps:
       - name: Checkout .fullsend repository
         uses: actions/checkout@v6
 
-      - name: Generate app token
+      - name: Mint fullsend token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: fullsend-ai/fullsend/.github/actions/mint-token@v0
         with:
-          client-id: ${{ vars.FULLSEND_FULLSEND_CLIENT_ID }}
-          private-key: ${{ secrets.FULLSEND_FULLSEND_APP_PRIVATE_KEY }}
-          owner: ${{ github.repository_owner }}
-          repositories: .fullsend
+          role: fullsend
+          repos: .fullsend
+          mint_url: ${{ vars.FULLSEND_MINT_URL }}
 
       - name: Find issues and dispatch prioritize runs
         env:
