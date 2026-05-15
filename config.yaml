@@ -5,6 +5,7 @@
 version: "1"
 dispatch:
     platform: github-actions
+    mode: oidc-mint
 inference:
     provider: vertex
 defaults:
@@ -13,9 +14,8 @@ defaults:
         - triage
         - coder
         - review
-        - fix
-        - prioritize
         - retro
+        - prioritize
     max_implementation_retries: 2
     auto_merge: false
 agents:
@@ -31,12 +31,12 @@ agents:
     - role: review
       name: fullsend-ai-review
       slug: fullsend-ai-review
-    - role: prioritize
-      name: fullsend-ai-prioritize
-      slug: fullsend-ai-prioritize
     - role: retro
       name: fullsend-ai-retro
       slug: fullsend-ai-retro
+    - role: prioritize
+      name: fullsend-ai-prioritize
+      slug: fullsend-ai-prioritize
 repos:
     .fullsend:
         enabled: false
