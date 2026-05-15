@@ -73,6 +73,40 @@ jobs:
       - name: Checkout .fullsend repository
         uses: actions/checkout@v6
 
+      - name: Checkout upstream defaults
+        uses: actions/checkout@v6
+        with:
+          repository: fullsend-ai/fullsend
+          ref: v0
+          path: .defaults
+          sparse-checkout: |
+            internal/scaffold/fullsend-repo/
+
+      - name: Prepare workspace (upstream defaults + org overrides)
+        run: |
+          set -euo pipefail
+          SRC=".defaults/internal/scaffold/fullsend-repo"
+          LAYERED_DIRS="agents skills schemas harness policies scripts env"
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "${SRC}/${dir}" ]]; then
+              mkdir -p "${dir}"
+              cp -r "${SRC}/${dir}/." "${dir}/"
+            fi
+          done
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "customized/${dir}" ]]; then
+              find "customized/${dir}" -type f ! -name '.gitkeep' -print0 \
+                | while IFS= read -r -d '' f; do
+                    rel="${f#customized/}"
+                    mkdir -p "$(dirname "${rel}")"
+                    cp "${f}" "${rel}"
+                  done
+            fi
+          done
+          mkdir -p .github/scripts
+          cp "${SRC}/.github/scripts/setup-agent-env.sh" .github/scripts/setup-agent-env.sh
+          rm -rf .defaults
+
       - name: Determine classify parameters
         id: params
         env:
@@ -211,6 +245,9 @@ jobs:
       - name: Prepare sandbox credentials
         run: bash scripts/prepare-sandbox-credentials.sh
 
+      - name: Install validation dependencies
+        run: pip install --quiet "jsonschema>=4.18.0"
+
       - name: Setup agent environment
         env:
           AGENT_PREFIX: CLASSIFY_
@@ -233,7 +270,7 @@ jobs:
         run: mkdir -p "${GITHUB_WORKSPACE}/target-repo"
 
       - name: Run classify agent
-        uses: ./.github/actions/fullsend
+        uses: fullsend-ai/fullsend/.github/actions/fullsend@v0
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           CLASSIFY_SOURCE_REPO: ${{ steps.params.outputs.source_repo }}
