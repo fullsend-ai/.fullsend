@@ -149,19 +149,11 @@ jobs:
           path: target-repo
           fetch-depth: 1
 
-      - name: Authenticate to Google Cloud
-        uses: google-github-actions/auth@v3
+      - name: Setup GCP and prepare credentials
+        uses: fullsend-ai/fullsend/.github/actions/setup-gcp@v0
         with:
-          credentials_json: ${{ secrets.FULLSEND_GCP_SA_KEY_JSON }}
-
-      - name: Mask GCP credential file paths
-        run: |
-          for var in GOOGLE_GHA_CREDS_PATH GOOGLE_APPLICATION_CREDENTIALS CLOUDSDK_AUTH_CREDENTIAL_FILE_OVERRIDE; do
-            val="${!var:-}"
-            if [[ -n "${val}" ]]; then
-              echo "::add-mask::${val}"
-            fi
-          done
+          gcp_wif_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+          gcp_project_id: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
 
       - name: Write Drive SA credentials
         env:
@@ -171,9 +163,6 @@ jobs:
           printf '%s' "${SCRIBE_SA_KEY}" > "${SCRIBE_CREDS}"
           echo "::add-mask::${SCRIBE_CREDS}"
           echo "SCRIBE_DRIVE_CREDENTIALS=${SCRIBE_CREDS}" >> "${GITHUB_ENV}"
-
-      - name: Prepare sandbox credentials
-        run: bash scripts/prepare-sandbox-credentials.sh
 
       - name: Setup agent environment
         env:
