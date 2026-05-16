@@ -25,11 +25,11 @@ Follow the `issue-classification` skill for the step-by-step classification proc
 
 ## Output format
 
-The top-level key MUST be `"issues"`. Do not use `"classifications"` or any other key name.
+Write a JSON file with a top-level `"classifications"` array:
 
 ```json
 {
-  "issues": [
+  "classifications": [
     {
       "issue_number": 42,
       "workstream_category": "Bug fixes",
