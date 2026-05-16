@@ -90,14 +90,14 @@ lookup_title() {
   awk -F'\t' -v n="${num}" '$1 == n { print $2; exit }' "${TITLES_FILE}"
 }
 
-AGENT_EVALUATED=$(jq '.issues | length' "${RESULT_FILE}")
+AGENT_EVALUATED=$(jq '.classifications | length' "${RESULT_FILE}")
 CLASSIFIED=0
 SKIPPED=0
 ERRORS=0
 NOT_EVALUATED=0
 
 # Build a set of issue numbers the agent evaluated for fast lookup.
-AGENT_ISSUE_NUMS=$(jq -r '.issues[].issue_number' "${RESULT_FILE}" | sort -n)
+AGENT_ISSUE_NUMS=$(jq -r '.classifications[].issue_number' "${RESULT_FILE}" | sort -n)
 
 # Count total open issues from the pre-script's list.
 if [[ -f "${ISSUES_FILE}" ]]; then
@@ -248,10 +248,10 @@ FILTER_MISMATCH_LINES=()
 BELOW_THRESHOLD_LINES=()
 
 for i in $(seq 0 $((AGENT_EVALUATED - 1))); do
-  ISSUE_NUM=$(jq -r ".issues[${i}].issue_number" "${RESULT_FILE}")
-  CATEGORY=$(jq -r ".issues[${i}].workstream_category // empty" "${RESULT_FILE}")
-  CONFIDENCE=$(jq -r ".issues[${i}].confidence" "${RESULT_FILE}")
-  REASONING=$(jq -r ".issues[${i}].reasoning" "${RESULT_FILE}")
+  ISSUE_NUM=$(jq -r ".classifications[${i}].issue_number" "${RESULT_FILE}")
+  CATEGORY=$(jq -r ".classifications[${i}].workstream_category // empty" "${RESULT_FILE}")
+  CONFIDENCE=$(jq -r ".classifications[${i}].confidence" "${RESULT_FILE}")
+  REASONING=$(jq -r ".classifications[${i}].reasoning" "${RESULT_FILE}")
 
   ACTIONS_TAKEN=""
   ISSUE_STATUS="skipped"
@@ -526,3 +526,4 @@ fi
 if [[ ${ERRORS} -gt 0 ]]; then
   echo "::warning::${ERRORS} error(s) during classification"
 fi
+
