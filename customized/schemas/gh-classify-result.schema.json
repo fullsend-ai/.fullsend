@@ -5,9 +5,11 @@
   "description": "Structured output from the gh-classify agent, validated by the harness before the post-script runs (ADR 0022). Category values must match the organization's configured project field options.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["issues"],
+  "required": [
+    "classifications"
+  ],
   "properties": {
-    "issues": {
+    "classifications": {
       "type": "array",
       "minItems": 0,
       "items": {
@@ -19,14 +21,22 @@
     "classification": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["issue_number", "workstream_category", "reasoning", "confidence"],
+      "required": [
+        "issue_number",
+        "workstream_category",
+        "reasoning",
+        "confidence"
+      ],
       "properties": {
         "issue_number": {
           "type": "integer",
           "minimum": 1
         },
         "workstream_category": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "description": "Must match one of the category names from the organization's categories document, or null if no confident match."
         },
         "reasoning": {
