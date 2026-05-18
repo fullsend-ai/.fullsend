@@ -40,20 +40,29 @@ jobs:
           ref: v0
           path: .defaults
           sparse-checkout: |
-            internal/scaffold/fullsend-repo/
+            internal/scaffold/fullsend-repo/agents/
+            internal/scaffold/fullsend-repo/skills/
+            internal/scaffold/fullsend-repo/schemas/
+            internal/scaffold/fullsend-repo/harness/
+            internal/scaffold/fullsend-repo/policies/
+            internal/scaffold/fullsend-repo/scripts/
+            .github/scripts/
 
       - name: Prepare workspace (upstream defaults + org overrides)
         run: |
           set -euo pipefail
-          SRC=".defaults/internal/scaffold/fullsend-repo"
-          LAYERED_DIRS="agents skills schemas harness policies scripts env"
-          for dir in ${LAYERED_DIRS}; do
-            if [[ -d "${SRC}/${dir}" ]]; then
+          for dir in agents skills schemas harness policies scripts; do
+            src=".defaults/internal/scaffold/fullsend-repo/${dir}"
+            if [[ -d "${src}" ]]; then
               mkdir -p "${dir}"
-              cp -r "${SRC}/${dir}/." "${dir}/"
+              cp -r "${src}/." "${dir}/"
             fi
           done
-          for dir in ${LAYERED_DIRS}; do
+          if [[ -d ".defaults/.github/scripts" ]]; then
+            mkdir -p .github/scripts
+            cp -r ".defaults/.github/scripts/." .github/scripts/
+          fi
+          for dir in agents skills schemas harness policies scripts; do
             if [[ -d "customized/${dir}" ]]; then
               find "customized/${dir}" -type f ! -name '.gitkeep' -print0 \
                 | while IFS= read -r -d '' f; do
@@ -63,8 +72,6 @@ jobs:
                   done
             fi
           done
-          mkdir -p .github/scripts
-          cp "${SRC}/.github/scripts/setup-agent-env.sh" .github/scripts/setup-agent-env.sh
           rm -rf .defaults
 
       - name: Validate enrollment and extract repo metadata

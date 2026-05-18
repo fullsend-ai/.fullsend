@@ -1,4 +1,4 @@
-# lint-workflow-size: max-lines=380
+# lint-workflow-size: max-lines=390
 # Dispatcher workflow that routes events to agent workflows based on stage.
 # Routing logic determines the stage from event context — the shim only
 # forwards the raw event.  Adding a new stage requires only a case branch
@@ -41,6 +41,7 @@ jobs:
           TRIGGERING_LABEL: ${{ github.event.label.name }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
           PR_BASE_REPO: ${{ github.event.pull_request.base.repo.full_name }}
+          PR_USER_LOGIN: ${{ github.event.pull_request.user.login }}
           ORG_NAME: ${{ github.repository_owner }}
         run: |
           set -euo pipefail
@@ -76,7 +77,7 @@ jobs:
           # Extract the first word of the comment as the command
           COMMAND=""
           if [[ -n "${COMMENT_BODY:-}" ]]; then
-            COMMAND="$(echo "${COMMENT_BODY}" | head -1 | awk '{print $1}')"
+            COMMAND="$(printf '%s\n' "${COMMENT_BODY}" | head -1 | awk '{print $1}')"
           fi
 
           case "${EVENT_NAME}" in
@@ -101,9 +102,16 @@ jobs:
                     fi
                   fi
                   ;;
-                /fs-retro)
+                /fs-retro|/fullsend)
                   if [[ "${COMMENT_USER_TYPE}" != "Bot" ]] && is_authorized; then
-                    STAGE="retro"
+                    if [[ "${COMMAND}" == "/fullsend" ]]; then
+                      SECOND_WORD="$(printf '%s\n' "${COMMENT_BODY}" | head -1 | awk '{print $2}')"
+                      if [[ "${SECOND_WORD}" == "retro" ]]; then
+                        STAGE="retro"
+                      fi
+                    else
+                      STAGE="retro"
+                    fi
                   fi
                   ;;
                 /fs-prioritize)
@@ -158,8 +166,14 @@ jobs:
                       # Check no-fix label (use PR_LABELS — issue.labels is empty
                       # on pull_request_review events)
                       if ! has_label "fullsend-no-fix" "${PR_LABELS}"; then
-                        STAGE="fix"
-                        TRIGGER_SOURCE="${REVIEW_USER_LOGIN}"
+                        # Human PRs require the fullsend-fix label to auto-trigger
+                        # the fix agent. The /fs-fix slash command intentionally
+                        # bypasses this gate — authorized users can always trigger
+                        # fix manually regardless of labels.
+                        if [[ "${PR_USER_LOGIN}" =~ \[bot\]$ ]] || has_label "fullsend-fix" "${PR_LABELS}"; then
+                          STAGE="fix"
+                          TRIGGER_SOURCE="${REVIEW_USER_LOGIN}"
+                        fi
                       fi
                     fi
                   fi
@@ -256,7 +270,8 @@ jobs:
           set -euo pipefail
           STAGE_ROLE="$STAGE"
           case "$STAGE" in
-            code|fix) STAGE_ROLE="coder" ;;
+            code) STAGE_ROLE="coder" ;;
+            retro|prioritize) STAGE_ROLE="fullsend" ;;
           esac
 
           ROLES=$(yq '.defaults.roles[]' config.yaml 2>/dev/null || echo "")
