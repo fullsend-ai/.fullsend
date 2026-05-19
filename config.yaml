@@ -42,6 +42,8 @@ repos:
         enabled: false
     experiments:
         enabled: true
+    features:
+        enabled: false
     fullsend:
         enabled: true
     metrics:
