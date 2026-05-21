@@ -44,6 +44,7 @@ jobs:
             internal/scaffold/fullsend-repo/skills/
             internal/scaffold/fullsend-repo/schemas/
             internal/scaffold/fullsend-repo/harness/
+            internal/scaffold/fullsend-repo/plugins/
             internal/scaffold/fullsend-repo/policies/
             internal/scaffold/fullsend-repo/scripts/
             .github/scripts/
@@ -51,7 +52,7 @@ jobs:
       - name: Prepare workspace (upstream defaults + org overrides)
         run: |
           set -euo pipefail
-          for dir in agents skills schemas harness policies scripts; do
+          for dir in agents skills schemas harness plugins policies scripts; do
             src=".defaults/internal/scaffold/fullsend-repo/${dir}"
             if [[ -d "${src}" ]]; then
               mkdir -p "${dir}"
@@ -62,7 +63,7 @@ jobs:
             mkdir -p .github/scripts
             cp -r ".defaults/.github/scripts/." .github/scripts/
           fi
-          for dir in agents skills schemas harness policies scripts; do
+          for dir in agents skills schemas harness plugins policies scripts; do
             if [[ -d "customized/${dir}" ]]; then
               find "customized/${dir}" -type f ! -name '.gitkeep' -print0 \
                 | while IFS= read -r -d '' f; do
