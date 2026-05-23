@@ -16,9 +16,9 @@ network_policies:
     endpoints:
       - host: "*.googleapis.com"
         port: 443
-        protocol: tcp
+        protocol: rest
         enforcement: enforce
-        access: allow
+        access: read-write
     binaries:
       - path: "**/curl"
       - path: "**/claude"
