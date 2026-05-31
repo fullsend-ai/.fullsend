@@ -2,11 +2,8 @@
 name: Prioritize Scheduler
 
 on:
-  # TODO: Re-enable once we have a first-class way to enable/disable
-  # schedule-based agents per org. Until then, keep commented out to avoid
-  # noisy Action runs in orgs that haven't configured the prioritize agent.
-  # schedule:
-  #   - cron: '*/10 * * * *'
+  schedule:
+    - cron: '*/10 * * * *'
   workflow_dispatch:
 
 concurrency:
