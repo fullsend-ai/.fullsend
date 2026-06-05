@@ -77,7 +77,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: fullsend-ai/fullsend
-          ref: v0
+          ref: main
           path: .defaults
           sparse-checkout: |
             internal/scaffold/fullsend-repo/
@@ -212,7 +212,7 @@ jobs:
           owner: ${{ github.repository_owner }}
 
       - name: Setup GCP and prepare credentials
-        uses: fullsend-ai/fullsend/.github/actions/setup-gcp@v0
+        uses: fullsend-ai/fullsend/.github/actions/setup-gcp@main
         with:
           gcp_wif_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
           gcp_project_id: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
@@ -239,7 +239,7 @@ jobs:
         run: mkdir -p "${GITHUB_WORKSPACE}/target-repo"
 
       - name: Run classify agent
-        uses: fullsend-ai/fullsend@v0
+        uses: fullsend-ai/fullsend@main
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           CLASSIFY_SOURCE_REPO: ${{ steps.params.outputs.source_repo }}
