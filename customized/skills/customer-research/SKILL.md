@@ -22,8 +22,7 @@ prioritization or customer impact.
 fullsend-ai passed its MVP milestone on April 23, 2026. The project is
 in active adoption, executing against revised 90-day goals (target: June
 30, 2026) focused on bug-fix workflow adoption, feature refinement
-capabilities, and evaluating trustworthiness of agent behaviors. See
-the P&D Agentic SDLC 30/60/90 Day Goals doc for the full plan.
+capabilities, and evaluating trustworthiness of agent behaviors.
 
 All agentic workflows are hybrid — teams use fullsend alongside manual
 and locally-driven methods. Auto-merge is not an expectation at this
