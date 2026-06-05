@@ -24,6 +24,9 @@ in active adoption, executing against revised 90-day goals (target: June
 30, 2026) focused on bug-fix workflow adoption, feature refinement
 capabilities, and evaluating trustworthiness of agent behaviors.
 
+A key near-term focus is multi-platform support (especially GitLab),
+driven by demand from multiple customers and use cases.
+
 All agentic workflows are hybrid — teams use fullsend alongside manual
 and locally-driven methods. Auto-merge is not an expectation at this
 phase; agent-produced code is reviewed by humans before merging.
