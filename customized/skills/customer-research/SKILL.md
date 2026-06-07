@@ -36,6 +36,12 @@ phase; agent-produced code is reviewed by humans before merging.
 > provided to fetch live data. Static content should be periodically
 > reviewed and updated.
 
+## Roadmap
+
+Consult [docs/roadmap.md](https://github.com/fullsend-ai/fullsend/blob/main/docs/roadmap.md)
+for context about what topics, areas, and outcomes we are pursuing as strategic
+next steps, independent of target user cohort considerations.
+
 ## Strategic customers
 
 The strategic customers are listed below. The fullsend-ai org itself is
