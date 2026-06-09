@@ -20,23 +20,23 @@ defaults:
     auto_merge: false
 agents:
     - role: fullsend
-      name: fullsend-ai-fullsend
-      slug: fullsend-ai-fullsend
+      name: ""
+      slug: ""
     - role: triage
-      name: fullsend-ai-triage
-      slug: fullsend-ai-triage
+      name: ""
+      slug: ""
     - role: coder
-      name: fullsend-ai-coder
-      slug: fullsend-ai-coder
+      name: ""
+      slug: ""
     - role: review
-      name: fullsend-ai-review
-      slug: fullsend-ai-review
+      name: ""
+      slug: ""
     - role: retro
-      name: fullsend-ai-retro
-      slug: fullsend-ai-retro
+      name: ""
+      slug: ""
     - role: prioritize
-      name: fullsend-ai-prioritize
-      slug: fullsend-ai-prioritize
+      name: ""
+      slug: ""
 repos:
     .fullsend:
         enabled: false
