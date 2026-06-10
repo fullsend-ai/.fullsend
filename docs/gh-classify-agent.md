@@ -357,7 +357,7 @@ The agent writes `agent-result.json` with this structure:
 
 ```json
 {
-  "issues": [
+  "classifications": [
     {
       "issue_number": 42,
       "workstream_category": "Bug fixes",

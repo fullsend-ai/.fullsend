@@ -232,7 +232,7 @@ jobs:
           CLASSIFY_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
           CLASSIFY_FILTER_CATEGORY: ${{ steps.params.outputs.filter_category || '__all__' }}
           CLASSIFY_SCREEN_ISSUES: ${{ steps.params.outputs.screen_issues }}
-          CLASSIFY_CATEGORIES_PATH: ${{ vars.FULLSEND_GH_CLASSIFY_CATEGORIES_PATH || 'categories.md' }}
+          CLASSIFY_CATEGORIES_PATH: ${{ vars.FULLSEND_GH_CLASSIFY_CATEGORIES_PATH || 'docs/workstream-categories.md' }}
         run: bash .github/scripts/setup-agent-env.sh
 
       - name: Prepare target-repo placeholder
@@ -251,7 +251,7 @@ jobs:
           CLASSIFY_FIELD_NAME: ${{ vars.FULLSEND_GH_CLASSIFY_FIELD_NAME || 'Workstream Category' }}
           CLASSIFY_FILTER_CATEGORY: ${{ steps.params.outputs.filter_category || '__all__' }}
           CLASSIFY_SCREEN_ISSUES: ${{ steps.params.outputs.screen_issues }}
-          CLASSIFY_CATEGORIES_PATH: ${{ vars.FULLSEND_GH_CLASSIFY_CATEGORIES_PATH || 'categories.md' }}
+          CLASSIFY_CATEGORIES_PATH: ${{ vars.FULLSEND_GH_CLASSIFY_CATEGORIES_PATH || 'docs/workstream-categories.md' }}
           CLASSIFY_PROJECT_TOKEN: ${{ secrets.FULLSEND_GH_CLASSIFY_PROJECT_PAT || '__none__' }}
         with:
           agent: gh-classify
