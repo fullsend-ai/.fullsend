@@ -43,7 +43,7 @@ jobs:
         uses: actions/checkout@v6
         with:
           repository: fullsend-ai/fullsend
-          ref: v0
+          ref: main
           path: .defaults
           sparse-checkout: |
             internal/scaffold/fullsend-repo/scripts/
@@ -67,7 +67,7 @@ jobs:
       - name: Mint fullsend token
         if: steps.repo-list.outputs.skip != 'true'
         id: app-token
-        uses: fullsend-ai/fullsend/.github/actions/mint-token@v0
+        uses: fullsend-ai/fullsend/.github/actions/mint-token@main
         with:
           role: fullsend
           repos: ${{ steps.repo-list.outputs.names }}
