@@ -15,8 +15,8 @@ host_files:
   - src: env/scribe.env
     dest: /sandbox/workspace/.env.d/scribe.env
     expand: true
-  - src: ${RUNNER_TEMP}/scribe-workspace/notes
-    dest: /sandbox/workspace/notes
+  - src: ${RUNNER_TEMP}/scribe-workspace/notes.tar.gz
+    dest: /sandbox/workspace/notes.tar.gz
   - src: ${RUNNER_TEMP}/scribe-workspace/backlog.json
     dest: /sandbox/workspace/backlog.json
   - src: ${RUNNER_TEMP}/scribe-workspace/closed-issues.json

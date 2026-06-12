@@ -164,6 +164,8 @@ if [[ "${DOC_COUNT}" -eq 0 ]]; then
   echo "No documents found — agent will produce empty result."
   rm -f "${WORK_DIR}/drive-response.json"
   unset ACCESS_TOKEN SA_EMAIL
+  # Pack empty notes directory — host_files only supports single files
+  tar -czf "${WORK_DIR}/notes.tar.gz" -C "${WORK_DIR}" notes
   jq -n \
     --arg cutoff "${CUTOFF_DATE}" \
     --arg repo "${SCRIBE_REPO}" \
@@ -307,6 +309,10 @@ jq -n \
     open_prs: $pr_count,
     repo_docs: $doc_path_count
   }' > "${META_FILE}"
+
+# Pack notes directory into a tarball — fullsend host_files only supports
+# single files, not directories (UploadFile vs UploadDir).
+tar -czf "${WORK_DIR}/notes.tar.gz" -C "${WORK_DIR}" notes
 
 # Cleanup: remove Drive API response (contains doc IDs and metadata)
 rm -f "${WORK_DIR}/drive-response.json" "${WORK_DIR}/doc-export-tmp"
