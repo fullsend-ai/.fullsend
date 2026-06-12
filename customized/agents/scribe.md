@@ -22,13 +22,14 @@ Additional context files (all in `/sandbox/workspace/`):
 
 ## Step 1: Read metadata and meeting notes
 
-First, read the metadata file to get the cutoff date and notes URL:
+First, extract the notes archive and read the metadata file. You MUST run these commands before reading notes — skipping them means no notes are available:
 
 ```
+tar -xzf /sandbox/workspace/notes.tar.gz -C /sandbox/workspace --no-absolute-names
 cat "$SCRIBE_META_FILE"
 ```
 
-This returns JSON with `cutoff_date` (ISO timestamp — only extract topics from meetings on or after this date) and `notes_url` (URL for citation links in comments).
+The metadata returns JSON with `cutoff_date` (ISO timestamp — only extract topics from meetings on or after this date) and `notes_url` (URL for citation links in comments).
 
 Then read all `.txt` files in `$SCRIBE_NOTES_DIR`. If no files exist, write an empty result and stop.
 
