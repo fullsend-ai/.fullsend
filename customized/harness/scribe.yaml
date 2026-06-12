@@ -5,28 +5,28 @@ policy: policies/scribe.yaml
 
 host_files:
   - src: env/gcp-vertex.env
-    dest: /tmp/workspace/.env.d/gcp-vertex.env
+    dest: /sandbox/workspace/.env.d/gcp-vertex.env
     expand: true
   - src: ${GOOGLE_APPLICATION_CREDENTIALS}
-    dest: /tmp/workspace/.gcp-credentials.json
+    dest: /tmp/.gcp-credentials.json
   - src: ${GCP_OIDC_TOKEN_FILE}
-    dest: /tmp/workspace/.gcp-oidc-token
+    dest: /sandbox/workspace/.gcp-oidc-token
     optional: true
   - src: env/scribe.env
-    dest: /tmp/workspace/.env.d/scribe.env
+    dest: /sandbox/workspace/.env.d/scribe.env
     expand: true
   - src: ${RUNNER_TEMP}/scribe-workspace/notes
-    dest: /tmp/workspace/notes
+    dest: /sandbox/workspace/notes
   - src: ${RUNNER_TEMP}/scribe-workspace/backlog.json
-    dest: /tmp/workspace/backlog.json
+    dest: /sandbox/workspace/backlog.json
   - src: ${RUNNER_TEMP}/scribe-workspace/closed-issues.json
-    dest: /tmp/workspace/closed-issues.json
+    dest: /sandbox/workspace/closed-issues.json
   - src: ${RUNNER_TEMP}/scribe-workspace/open-prs.json
-    dest: /tmp/workspace/open-prs.json
+    dest: /sandbox/workspace/open-prs.json
   - src: ${RUNNER_TEMP}/scribe-workspace/repo-docs-index.json
-    dest: /tmp/workspace/repo-docs-index.json
+    dest: /sandbox/workspace/repo-docs-index.json
   - src: ${RUNNER_TEMP}/scribe-workspace/scribe-meta.json
-    dest: /tmp/workspace/scribe-meta.json
+    dest: /sandbox/workspace/scribe-meta.json
 
 skills: []
 

@@ -10,12 +10,12 @@ You are a scribe agent. Your job is to read pre-processed meeting notes and prod
 
 ## Inputs
 
-- `SCRIBE_NOTES_DIR` — directory containing cleaned meeting note files (plain text, PII already scrubbed by pre-script). Default: `/tmp/workspace/notes`
-- `SCRIBE_BACKLOG_FILE` — JSON file containing open issues with truncated bodies (`[{"number": 42, "title": "...", "body": "...", "labels": [...], "milestone": ..., "url": "..."}]`). Default: `/tmp/workspace/backlog.json`
-- `SCRIBE_META_FILE` — JSON file with runtime metadata from the pre-script. Default: `/tmp/workspace/scribe-meta.json`
+- `SCRIBE_NOTES_DIR` — directory containing cleaned meeting note files (plain text, PII already scrubbed by pre-script). Default: `/sandbox/workspace/notes`
+- `SCRIBE_BACKLOG_FILE` — JSON file containing open issues with truncated bodies (`[{"number": 42, "title": "...", "body": "...", "labels": [...], "milestone": ..., "url": "..."}]`). Default: `/sandbox/workspace/backlog.json`
+- `SCRIBE_META_FILE` — JSON file with runtime metadata from the pre-script. Default: `/sandbox/workspace/scribe-meta.json`
 - `SCRIBE_REPO` — target GitHub repository (`owner/name`).
 
-Additional context files (all in `/tmp/workspace/`):
+Additional context files (all in `/sandbox/workspace/`):
 - `closed-issues.json` — recently closed issues (`[{"number": N, "title": "...", "labels": [...], "url": "..."}]`). Use to avoid proposing issues that are already resolved and to reference completed work.
 - `open-prs.json` — open pull requests (`[{"number": N, "title": "...", "labels": [...], "url": "...", "headRefName": "..."}]`). Use to link meeting discussions about in-flight work to actual PRs.
 - `repo-docs-index.json` — array of markdown file paths in the repo's `docs/` tree (ADRs, problem docs, guides). Use to reference relevant docs in new issue bodies.
@@ -38,9 +38,9 @@ Read all context files. These give you the full picture of the project's current
 
 ```
 cat "$SCRIBE_BACKLOG_FILE" | jq '.'
-cat /tmp/workspace/closed-issues.json | jq '.'
-cat /tmp/workspace/open-prs.json | jq '.'
-cat /tmp/workspace/repo-docs-index.json | jq '.'
+cat /sandbox/workspace/closed-issues.json | jq '.'
+cat /sandbox/workspace/open-prs.json | jq '.'
+cat /sandbox/workspace/repo-docs-index.json | jq '.'
 ```
 
 **Open issues** — primary matching target. Read the truncated `body` field to understand each issue's scope, not just the title. Match meeting topics to issues based on both title and body content.
