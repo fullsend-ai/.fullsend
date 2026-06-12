@@ -16,7 +16,7 @@ your role and constraints; this skill defines the process.
 ## Step 1: Load categories
 
 Read the categories document from `CLASSIFY_CATEGORIES_PATH`. The harness
-copies it into the sandbox as `/tmp/workspace/categories.md` when the path
+copies it into the sandbox as `/sandbox/workspace/categories.md` when the path
 is configured. Fall back through known locations, then the GitHub API:
 
 ```bash
@@ -24,8 +24,8 @@ CATEGORIES_PATH="${CLASSIFY_CATEGORIES_PATH:-categories.md}"
 
 if [ -f "$CATEGORIES_PATH" ]; then
   cat "$CATEGORIES_PATH"
-elif [ -f "/tmp/workspace/categories.md" ]; then
-  cat "/tmp/workspace/categories.md"
+elif [ -f "/sandbox/workspace/categories.md" ]; then
+  cat "/sandbox/workspace/categories.md"
 elif [ -f "../$CATEGORIES_PATH" ]; then
   cat "../$CATEGORIES_PATH"
 elif [ -f "target-repo/$CATEGORIES_PATH" ]; then

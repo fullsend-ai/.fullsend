@@ -42,7 +42,7 @@ REPO_DOCS_FILE="${WORK_DIR}/repo-docs-index.json"
 # Open issues with bodies (truncated to 500 chars to keep context lean)
 echo "Fetching open issues from ${SCRIBE_REPO}..."
 gh issue list --repo "${SCRIBE_REPO}" --state open \
-  --json number,title,body,labels,milestone,url --limit 500 \
+  --json number,title,body,labels,milestone,url --limit 1000 \
   | jq '[.[] | .body = ((.body // "")[:500] + if ((.body // "") | length) > 500 then "…" else "" end)]' \
   > "${BACKLOG_FILE}"
 ISSUE_COUNT=$(jq 'length' "${BACKLOG_FILE}")
