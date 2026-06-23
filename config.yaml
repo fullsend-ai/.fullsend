@@ -37,6 +37,8 @@ agents:
     - role: prioritize
       name: ""
       slug: ""
+allowed_remote_resources:
+    - https://raw.githubusercontent.com/fullsend-ai/fullsend/
 repos:
     .fullsend:
         enabled: false
