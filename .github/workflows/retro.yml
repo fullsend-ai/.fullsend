@@ -1,3 +1,5 @@
+# This file is managed by fullsend. Do not edit it directly.
+# Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/retro.yml
 ---
 # fullsend-stage: retro
 name: Retro
@@ -34,15 +36,15 @@ jobs:
 
   retro:
     needs: debounce
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-retro.yml@main
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-retro.yml@v0
     with:
       event_type: ${{ inputs.event_type }}
       source_repo: ${{ inputs.source_repo }}
       event_payload: ${{ inputs.event_payload }}
       mint_url: ${{ vars.FULLSEND_MINT_URL }}
       gcp_region: ${{ vars.FULLSEND_GCP_REGION }}
-      fullsend_ai_ref: main
-      fullsend_version: main
+      install_mode: per-org
+      fullsend_ai_ref: v0
     secrets:
       FULLSEND_GCP_WIF_PROVIDER: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
       FULLSEND_GCP_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
