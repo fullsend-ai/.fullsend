@@ -3,7 +3,9 @@ name: customer-research
 description: >-
   Use when triaging issues, prioritizing work, making product decisions, or
   needing to understand who is using fullsend-ai, which customers are
-  strategic, and what their current onboarding status is.
+  strategic, and what their current onboarding status is. Also inspect
+  custom/dev-blocker and custom/tsd-blocker labels on the issue under
+  consideration to identify which customer cohorts are blocked.
 ---
 
 # Customer Research
@@ -16,6 +18,34 @@ understanding who a GitHub user is in relation to fullsend-ai adoption.
 
 Do NOT use for purely technical questions that don't involve
 prioritization or customer impact.
+
+## Issue adoption blocker labels
+
+When evaluating a specific issue, **check its labels first**. Use labels
+already returned by `gh issue view` (or fetch them if only an issue
+number/repo is known). Do not infer blocker status from title or body
+alone when labels are present.
+
+These are `custom/*` team labels — not triage pipeline control labels.
+
+| Label | Blocks | Maps to strategic customer |
+|-------|--------|----------------------------|
+| `custom/dev-blocker` | `redhat-developer` GitHub org adoption | §2 — redhat-developer (via @deboer-tim) |
+| `custom/tsd-blocker` | TSD (Trusted Software Delivery) adoption | §6 — TSD (Trusted Software Delivery) |
+
+**When either label is present:**
+
+- Treat the issue as an **adoption blocker** for that cohort — not
+  merely feedback or a nice-to-have.
+- For RICE scoring (prioritize agent): bias **Reach** toward at least
+  **1** (one strategic customer) and **Impact** toward at least **2**
+  (blocking or severely degrading a workflow), unless issue content
+  clearly contradicts that.
+- Mention the label and blocked cohort explicitly in Reach/Impact
+  reasoning.
+- An issue may carry **both** labels; in that case both cohorts are
+  blocked and Reach should reflect multiple strategic customers (≥
+  **1.5**).
 
 ## Project status
 
@@ -80,6 +110,9 @@ Issues he has filed:
 His feedback is a direct signal of what a new org onboarding experience
 looks like from the outside.
 
+Issues labeled `custom/dev-blocker` are confirmed adoption blockers for
+this org.
+
 ### 3. guacsec (via @mrizzi)
 
 @mrizzi is evaluating fullsend-ai for potential use in the
@@ -114,3 +147,26 @@ via the `fullsend-playground` GitHub org. This has generated a large
 number of new interested users checking out the project. These are
 early explorers — not yet strategic customers — but their feedback is
 valuable signal on the out-of-box experience and should be monitored.
+
+### 6. TSD (Trusted Software Delivery)
+
+The **TSD** (Trusted Software Delivery) team maintains developer-facing
+Red Hat products focused on secure software supply chains, notably
+**RHTPA** (Red Hat Trusted Profile Analyzer) and **RHTAS** (Red Hat
+Trusted Artifact Signer). RHTPA automates SBOM management, risk
+profiling, and compliance checking; RHTAS provides cryptographic signing
+and verification for software artifacts (Sigstore-based).
+
+**Contacts:** @Roming22 (TSD portfolio PM), @mrizzi (RHTPA PM). Note:
+@mrizzi also appears in the guacsec evaluation context (§3) — both
+roles are relevant.
+
+Relevant GitHub orgs include
+[`securesign`](https://github.com/securesign) (RHTAS midstream) and
+[`trustification`](https://github.com/trustification) (RHTPA-related
+tooling). These products sit in the Red Hat Trusted Software Supply
+Chain portfolio alongside RHDH and Konflux.
+
+Issues labeled `custom/tsd-blocker` are confirmed adoption blockers for
+TSD customers — treat them with the same urgency as `custom/dev-blocker`
+issues for redhat-developer.
