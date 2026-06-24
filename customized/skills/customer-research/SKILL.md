@@ -31,7 +31,7 @@ These are `custom/*` team labels — not triage pipeline control labels.
 | Label | Blocks | Maps to strategic customer |
 |-------|--------|----------------------------|
 | `custom/dev-blocker` | `redhat-developer` GitHub org adoption | §2 — redhat-developer (via @deboer-tim) |
-| `custom/tsd-blocker` | TSD (Trusted Software Delivery) adoption | §6 — TSD (Trusted Software Delivery) |
+| `custom/tsd-blocker` | TSD (Trusted Software Delivery) adoption | §5 — TSD (Trusted Software Delivery) |
 
 **When either label is present:**
 
@@ -140,15 +140,7 @@ adoption, though onboarding is currently blocked on reducing install
 overhead and simplifying customization options. Unblocking these teams
 is a priority for the fullsend team in June 2026.
 
-### 5. fullsend-playground (new interest via @ascerra's demo)
-
-@ascerra ran a demo on June 3, 2026 inviting people to try fullsend
-via the `fullsend-playground` GitHub org. This has generated a large
-number of new interested users checking out the project. These are
-early explorers — not yet strategic customers — but their feedback is
-valuable signal on the out-of-box experience and should be monitored.
-
-### 6. TSD (Trusted Software Delivery)
+### 5. TSD (Trusted Software Delivery)
 
 The **TSD** (Trusted Software Delivery) team maintains developer-facing
 Red Hat products focused on secure software supply chains, notably
