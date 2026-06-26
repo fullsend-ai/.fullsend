@@ -71,10 +71,10 @@ jobs:
 
     steps:
       - name: Checkout .fullsend repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
 
       - name: Checkout upstream defaults
-        uses: actions/checkout@v6
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           repository: fullsend-ai/fullsend
           ref: main
@@ -203,7 +203,7 @@ jobs:
 
       - name: Generate app token
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           # Reuse triage app (has issues:write + organization_projects:write).
           # TODO: create a dedicated gh-classify app when promoted to first-class.

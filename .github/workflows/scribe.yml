@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout .fullsend repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
 
       - name: Checkout upstream defaults
-        uses: actions/checkout@v6
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           repository: fullsend-ai/fullsend
           ref: main
@@ -115,7 +115,7 @@ jobs:
 
       - name: Generate app token (issues)
         id: app-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           # TODO: create a dedicated scribe app with issues:write + contents:read
           client-id: ${{ vars.FULLSEND_TRIAGE_CLIENT_ID }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Generate app token (contents)
         id: contents-token
-        uses: actions/create-github-app-token@v3
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           client-id: ${{ vars.FULLSEND_CODER_CLIENT_ID }}
           private-key: ${{ secrets.FULLSEND_CODER_APP_PRIVATE_KEY }}
@@ -142,7 +142,7 @@ jobs:
           echo "repo=${TARGET}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout target repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
         with:
           repository: ${{ steps.target.outputs.repo }}
           token: ${{ steps.contents-token.outputs.token }}
