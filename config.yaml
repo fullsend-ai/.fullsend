@@ -18,27 +18,6 @@ defaults:
         - prioritize
     max_implementation_retries: 2
     auto_merge: false
-agents:
-    - role: fullsend
-      name: ""
-      slug: ""
-    - role: triage
-      name: ""
-      slug: ""
-    - role: coder
-      name: ""
-      slug: ""
-    - role: review
-      name: ""
-      slug: ""
-    - role: retro
-      name: ""
-      slug: ""
-    - role: prioritize
-      name: ""
-      slug: ""
-allowed_remote_resources:
-    - https://raw.githubusercontent.com/fullsend-ai/fullsend/
 repos:
     .fullsend:
         enabled: false
@@ -48,3 +27,7 @@ repos:
         enabled: true
     metrics:
         enabled: true
+    triage-agent:
+        enabled: true
+allowed_remote_resources:
+    - https://raw.githubusercontent.com/fullsend-ai/fullsend/
