@@ -48,3 +48,5 @@ repos:
         enabled: true
     metrics:
         enabled: true
+    triage-agent:
+        enabled: true
