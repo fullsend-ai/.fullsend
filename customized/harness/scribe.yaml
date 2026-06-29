@@ -14,9 +14,6 @@ host_files:
   - src: ${GCP_OIDC_TOKEN_FILE}
     dest: /sandbox/workspace/.gcp-oidc-token
     optional: true
-  - src: env/scribe.env
-    dest: /sandbox/workspace/.env.d/scribe.env
-    expand: true
   - src: ${RUNNER_TEMP}/scribe-workspace/notes.tar.gz
     dest: /sandbox/workspace/notes.tar.gz
   - src: ${RUNNER_TEMP}/scribe-workspace/backlog.json
@@ -40,16 +37,24 @@ validation_loop:
 
 post_script: scripts/post-scribe.sh
 
-runner_env:
-  SCRIBE_REPO: ${REPO}
-  SCRIBE_SEARCH_QUERY: ${SEARCH_QUERY}
-  SCRIBE_LOOKBACK_HOURS: ${LOOKBACK_HOURS}
-  SCRIBE_DRY_RUN: ${DRY_RUN}
-  SCRIBE_MIN_CONFIDENCE: ${MIN_CONFIDENCE}
-  SCRIBE_MODE: ${MODE}
-  SCRIBE_SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
-  GH_TOKEN: ${GH_TOKEN}
-  CONTENTS_TOKEN: ${CONTENTS_TOKEN}
-  FULLSEND_OUTPUT_SCHEMA: ${FULLSEND_DIR}/schemas/scribe-result.schema.json
+env:
+  runner:
+    SCRIBE_REPO: ${REPO}
+    SCRIBE_SEARCH_QUERY: ${SEARCH_QUERY}
+    SCRIBE_LOOKBACK_HOURS: ${LOOKBACK_HOURS}
+    SCRIBE_DRY_RUN: ${DRY_RUN}
+    SCRIBE_MIN_CONFIDENCE: ${MIN_CONFIDENCE}
+    SCRIBE_MODE: ${MODE}
+    SCRIBE_SLACK_WEBHOOK_URL: ${SLACK_WEBHOOK_URL}
+    GH_TOKEN: ${GH_TOKEN}
+    CONTENTS_TOKEN: ${CONTENTS_TOKEN}
+    FULLSEND_OUTPUT_SCHEMA: ${FULLSEND_DIR}/schemas/scribe-result.schema.json
+  sandbox:
+    SCRIBE_REPO: "${REPO}"
+    SCRIBE_SEARCH_QUERY: "${SEARCH_QUERY}"
+    SCRIBE_LOOKBACK_HOURS: "${LOOKBACK_HOURS}"
+    SCRIBE_DRY_RUN: "${DRY_RUN}"
+    SCRIBE_MIN_CONFIDENCE: "${MIN_CONFIDENCE}"
+    SCRIBE_MODE: "${MODE}"
 
 timeout_minutes: 15
