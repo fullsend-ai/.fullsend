@@ -185,3 +185,4 @@ jobs:
         uses: fullsend-ai/fullsend@main
         with:
           agent: scribe
+          github_token: ${{ steps.app-token.outputs.token }}
