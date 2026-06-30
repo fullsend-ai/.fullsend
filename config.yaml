@@ -16,6 +16,7 @@ defaults:
         - review
         - retro
         - prioritize
+        - qualityflow
     runtime: claude
     max_implementation_retries: 2
     auto_merge: false
@@ -33,6 +34,7 @@ repos:
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
+    - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
 create_issues:
     allow_targets:
         orgs:
@@ -46,3 +48,4 @@ agents:
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/review.yaml#sha256=6b5cd38510ffe0526c46d8172371e9602634254841abe3e8a8e0ce183d9ef7b9
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/retro.yaml#sha256=8be74d42aa94ed0083fd1a915f9903435d797b801b3866acd7e8249830388835
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/prioritize.yaml#sha256=21cf62dce54fce3ae23cf5e3dfe901d03b69bc5e91533288ffa772187b24e95d
+  - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/b26c947e95e6325284c5542d466a2a016f6aa312/harness/qualityflow.yaml#sha256=473d44a73c465b318fa3cd8dfee2c55b4a5dc7439f994607eb774825c43c17c2
