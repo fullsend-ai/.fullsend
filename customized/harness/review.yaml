@@ -1,7 +1,6 @@
 # Inherit upstream defaults; only override severity threshold.
 # The integrity hash pins the base to a known version.
 base: https://raw.githubusercontent.com/fullsend-ai/fullsend/ce6c78670078eec9664f21269ad8ca936ef1e092/internal/scaffold/fullsend-repo/harness/review.yaml#sha256=567e00e587a5f46d5730e48a52fd4117a076deee190a34c5c1f417cb690ce8ea
-sandbox_timeout_seconds: 300
 env:
   runner:
     REVIEW_FINDING_SEVERITY_THRESHOLD: "medium"
