@@ -16,6 +16,7 @@ defaults:
         - review
         - retro
         - prioritize
+        - qualityflow
     max_implementation_retries: 2
     auto_merge: false
 repos:
@@ -31,3 +32,4 @@ repos:
         enabled: true
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
+    - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/

@@ -162,6 +162,13 @@ jobs:
                     STAGE="prioritize"
                   fi
                   ;;
+                /fs-plan-tests)
+                  if [[ "${ISSUE_HAS_PR}" == "true" ]]; then
+                    if [[ "${COMMENT_USER_TYPE}" != "Bot" ]] && is_authorized; then
+                      STAGE="qualityflow"
+                    fi
+                  fi
+                  ;;
                 *)
                   # Intentionally weaker gate: allows external reporters to
                   # re-trigger triage by providing clarification on needs-info
@@ -348,6 +355,7 @@ jobs:
           case "$STAGE" in
             code|fix) STAGE_ROLE="coder" ;;
             retro|prioritize) STAGE_ROLE="fullsend" ;;
+            qualityflow) STAGE_ROLE="qualityflow" ;;
           esac
 
           ROLES=$(yq '.defaults.roles[]' config.yaml 2>/dev/null || echo "")

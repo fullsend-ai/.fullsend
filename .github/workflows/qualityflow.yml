@@ -1,0 +1,104 @@
+# fullsend-stage: qualityflow
+name: QualityFlow
+
+permissions:
+  actions: write
+  contents: write
+  id-token: write
+  issues: write
+  pull-requests: write
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_type:
+        required: true
+        type: string
+      source_repo:
+        required: true
+        type: string
+      event_payload:
+        required: true
+        type: string
+
+concurrency:
+  group: fullsend-qualityflow-${{ inputs.source_repo }}-${{ fromJSON(inputs.event_payload).issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  qualityflow:
+    name: QualityFlow
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      id-token: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout .fullsend repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Checkout upstream defaults
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: fullsend-ai/fullsend
+          ref: main
+          path: .defaults
+          sparse-checkout: |
+            internal/scaffold/fullsend-repo/
+
+      - name: Prepare workspace (upstream defaults + org overrides)
+        run: |
+          set -euo pipefail
+          SRC=".defaults/internal/scaffold/fullsend-repo"
+          LAYERED_DIRS="agents skills schemas harness policies scripts env plugins"
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "${SRC}/${dir}" ]]; then
+              mkdir -p "${dir}"
+              cp -r "${SRC}/${dir}/." "${dir}/"
+            fi
+          done
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "customized/${dir}" ]]; then
+              find "customized/${dir}" -type f ! -name '.gitkeep' -print0 \
+                | while IFS= read -r -d '' f; do
+                    rel="${f#customized/}"
+                    mkdir -p "$(dirname "${rel}")"
+                    cp "${f}" "${rel}"
+                  done
+            fi
+          done
+          mkdir -p .github/scripts
+          cp "${SRC}/.github/scripts/setup-agent-env.sh" .github/scripts/setup-agent-env.sh
+          rm -rf .defaults
+
+      - name: Generate app token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.FULLSEND_CODER_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_CODER_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Setup GCP and prepare credentials
+        uses: fullsend-ai/fullsend/.github/actions/setup-gcp@main
+        with:
+          gcp_wif_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+          gcp_project_id: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+
+      - name: Setup agent environment
+        env:
+          AGENT_PREFIX: QUALITYFLOW_
+          QUALITYFLOW_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          QUALITYFLOW_SOURCE_REPO: ${{ inputs.source_repo }}
+          QUALITYFLOW_EVENT_PAYLOAD: ${{ inputs.event_payload }}
+          QUALITYFLOW_ANTHROPIC_VERTEX_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+          QUALITYFLOW_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
+        run: bash .github/scripts/setup-agent-env.sh
+
+      - name: Run qualityflow agent
+        uses: fullsend-ai/fullsend@main
+        with:
+          agent: qualityflow

@@ -1,0 +1,10 @@
+# QualityFlow — AI-powered QE pipeline for automated test planning and generation.
+#
+# Inherits the full agent definition from the QualityFlow open-source repo.
+# All agents, skills, policies, and scripts are resolved from the base.
+#
+# To update the pin:
+#   1. Get the new commit SHA from the QualityFlow repo
+#   2. Compute: curl -sL "https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/<sha>/harness/qualityflow.yaml" | shasum -a 256
+#   3. Replace the base: line below
+base: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/deadba11521d2867bee0b0965641b54bb1f13c1b/harness/qualityflow.yaml#sha256=d63dc935c7076a565ea4ea5d2281a7beafcee29ad6dd1c13ced9729d849c3f60
