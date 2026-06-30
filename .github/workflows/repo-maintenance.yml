@@ -1,0 +1,83 @@
+# This file is managed by fullsend. Do not edit it directly.
+# Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/repo-maintenance.yml
+---
+name: Repo Maintenance
+
+on:
+  push:
+    branches: [main]
+    paths: [config.yaml, templates/shim-workflow-call.yaml]
+  workflow_dispatch:
+
+concurrency:
+  group: repo-maintenance
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  reconcile:
+    name: Reconcile enrollment
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout .fullsend
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+
+      - name: Extract all repo names from config
+        id: repo-list
+        run: |
+          # Collect ALL repos (enabled + disabled) so the minted token has
+          # access to disabled repos too. Without this, the reconcile script
+          # silently skips unenrollment because API calls to repos outside
+          # the token scope fail and get swallowed by error suppression.
+          ALL=$(yq '[.repos | to_entries[] | select(.value.enabled == true or .value.enabled == false) | .key] | join(",")' config.yaml)
+          if [[ -z "$ALL" ]]; then
+            echo "::notice::No enabled or disabled repos found in config.yaml — nothing to do"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "names=$ALL" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout upstream scripts
+        if: steps.repo-list.outputs.skip != 'true'
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          repository: fullsend-ai/fullsend
+          ref: main
+          path: .defaults
+          sparse-checkout: |
+            internal/scaffold/fullsend-repo/scripts/
+
+      - name: Prepare scripts
+        if: steps.repo-list.outputs.skip != 'true'
+        run: |
+          set -euo pipefail
+          mkdir -p scripts
+          cp -r ".defaults/internal/scaffold/fullsend-repo/scripts/." scripts/
+          if [[ -d "customized/scripts" ]]; then
+            find "customized/scripts" -type f ! -name '.gitkeep' -print0 \
+              | while IFS= read -r -d '' f; do
+                  rel="${f#customized/}"
+                  mkdir -p "$(dirname "${rel}")"
+                  cp "${f}" "${rel}"
+                done
+          fi
+          rm -rf .defaults
+
+      - name: Mint fullsend token
+        if: steps.repo-list.outputs.skip != 'true'
+        id: app-token
+        uses: fullsend-ai/fullsend/.github/actions/mint-token@main
+        with:
+          role: fullsend
+          repos: ${{ steps.repo-list.outputs.names }}
+          mint_url: ${{ vars.FULLSEND_MINT_URL }}
+
+      - name: Reconcile target repos
+        if: steps.repo-list.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          WORKSPACE: ${{ github.workspace }}
+        run: bash scripts/reconcile-repos.sh "$WORKSPACE"

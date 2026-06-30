@@ -1,0 +1,187 @@
+# fullsend-stage: scribe
+name: Scribe
+
+on:
+  schedule:
+    # Mon–Thu at 14:00 UTC (10:00 AM ET); scheduled 1 hour early to absorb GHA cron drift.
+    - cron: "0 14 * * 1-4"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Preview mode — no GitHub writes (ALWAYS use true during development)"
+        required: true
+        default: "true"
+        type: choice
+        options:
+          - "true"
+          - "false"
+      lookback_hours:
+        description: "How far back to search for meeting notes"
+        required: false
+        default: "3"
+        type: string
+      min_confidence:
+        description: "Minimum confidence score (0.0–1.0) for topics to pass the security gate"
+        required: false
+        default: "0.6"
+        type: string
+      mode:
+        description: "Agent mode: all (comments + new issues), comments_only, new_issues_only"
+        required: false
+        default: "all"
+        type: choice
+        options:
+          - "all"
+          - "comments_only"
+          - "new_issues_only"
+
+env:
+  SCRIBE_DRY_RUN_DEFAULT: "true"
+
+concurrency:
+  group: fullsend-scribe
+  cancel-in-progress: false
+
+jobs:
+  scribe:
+    name: Scribe
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+      issues: write
+
+    steps:
+      - name: Checkout .fullsend repository
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+
+      - name: Checkout upstream defaults
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          repository: fullsend-ai/fullsend
+          ref: main
+          path: .defaults
+          sparse-checkout: |
+            internal/scaffold/fullsend-repo/
+
+      - name: Prepare workspace (upstream defaults + org overrides)
+        run: |
+          set -euo pipefail
+          SRC=".defaults/internal/scaffold/fullsend-repo"
+          LAYERED_DIRS="agents skills schemas harness policies scripts env"
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "${SRC}/${dir}" ]]; then
+              mkdir -p "${dir}"
+              cp -r "${SRC}/${dir}/." "${dir}/"
+            fi
+          done
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "customized/${dir}" ]]; then
+              find "customized/${dir}" -type f ! -name '.gitkeep' -print0 \
+                | while IFS= read -r -d '' f; do
+                    rel="${f#customized/}"
+                    mkdir -p "$(dirname "${rel}")"
+                    cp "${f}" "${rel}"
+                  done
+            fi
+          done
+          mkdir -p .github/scripts
+          cp "${SRC}/.github/scripts/setup-agent-env.sh" .github/scripts/setup-agent-env.sh
+          rm -rf .defaults
+
+      - name: Determine dry-run mode
+        id: config
+        run: |
+          if [[ "${{ github.event_name }}" == "schedule" ]]; then
+            echo "dry_run=${{ vars.SCRIBE_DRY_RUN || env.SCRIBE_DRY_RUN_DEFAULT }}" >> "${GITHUB_OUTPUT}"
+            echo "lookback=${{ vars.SCRIBE_LOOKBACK_HOURS || '3' }}" >> "${GITHUB_OUTPUT}"
+            echo "min_confidence=${{ vars.SCRIBE_MIN_CONFIDENCE || '0.6' }}" >> "${GITHUB_OUTPUT}"
+            echo "mode=${{ vars.SCRIBE_MODE || 'all' }}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "dry_run=${{ inputs.dry_run || 'true' }}" >> "${GITHUB_OUTPUT}"
+            echo "lookback=${{ inputs.lookback_hours || vars.SCRIBE_LOOKBACK_HOURS || '3' }}" >> "${GITHUB_OUTPUT}"
+            echo "min_confidence=${{ inputs.min_confidence || vars.SCRIBE_MIN_CONFIDENCE || '0.6' }}" >> "${GITHUB_OUTPUT}"
+            echo "mode=${{ inputs.mode || vars.SCRIBE_MODE || 'all' }}" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Safety check
+        run: |
+          echo "::notice::Scribe dry_run=${{ steps.config.outputs.dry_run }}"
+          if [[ "${{ steps.config.outputs.dry_run }}" != "true" && "${{ steps.config.outputs.dry_run }}" != "false" ]]; then
+            echo "::error::Invalid dry_run value — must be 'true' or 'false'"
+            exit 1
+          fi
+
+      - name: Generate app token (issues)
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          # TODO: create a dedicated scribe app with issues:write + contents:read
+          client-id: ${{ vars.FULLSEND_TRIAGE_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_TRIAGE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Generate app token (contents)
+        id: contents-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ vars.FULLSEND_CODER_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_CODER_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Resolve target repository
+        id: target
+        run: |
+          TARGET="${{ vars.SCRIBE_TARGET_REPO }}"
+          if [[ -z "${TARGET}" ]]; then
+            TARGET="${{ github.repository_owner }}/${{ github.event.repository.name }}"
+          elif [[ "${TARGET}" != */* ]]; then
+            TARGET="${{ github.repository_owner }}/${TARGET}"
+          fi
+          echo "repo=${TARGET}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout target repository
+        uses: actions/checkout@9f698171ed81b15d1823a05fc7211befd50c8ae0 # v6.0.3
+        with:
+          repository: ${{ steps.target.outputs.repo }}
+          token: ${{ steps.contents-token.outputs.token }}
+          path: target-repo
+          fetch-depth: 1
+
+      - name: Setup GCP and prepare credentials
+        uses: fullsend-ai/fullsend/.github/actions/setup-gcp@main
+        with:
+          gcp_wif_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+          gcp_project_id: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+
+      - name: Write Drive SA credentials
+        env:
+          SCRIBE_SA_KEY: ${{ secrets.SCRIBE_GCP_SA_KEY_JSON }}
+        run: |
+          SCRIBE_CREDS="${RUNNER_TEMP}/scribe-drive-sa.json"
+          printf '%s' "${SCRIBE_SA_KEY}" > "${SCRIBE_CREDS}"
+          echo "::add-mask::${SCRIBE_CREDS}"
+          echo "SCRIBE_DRIVE_CREDENTIALS=${SCRIBE_CREDS}" >> "${GITHUB_ENV}"
+
+      - name: Setup agent environment
+        env:
+          AGENT_PREFIX: SCRIBE_
+          SCRIBE_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          SCRIBE_CONTENTS_TOKEN: ${{ steps.contents-token.outputs.token }}
+          SCRIBE_REPO: ${{ steps.target.outputs.repo }}
+          SCRIBE_SEARCH_QUERY: ${{ vars.SCRIBE_GDRIVE_SEARCH_QUERY }}
+          SCRIBE_NAME_FILTER: ${{ vars.SCRIBE_GDRIVE_NAME_FILTER || '' }}
+          SCRIBE_LOOKBACK_HOURS: ${{ steps.config.outputs.lookback }}
+          SCRIBE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
+          SCRIBE_MIN_CONFIDENCE: ${{ steps.config.outputs.min_confidence }}
+          SCRIBE_MODE: ${{ steps.config.outputs.mode }}
+          SCRIBE_SLACK_WEBHOOK_URL: ${{ secrets.SCRIBE_SLACK_WEBHOOK_URL }}
+          SCRIBE_ANTHROPIC_VERTEX_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+          SCRIBE_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
+        run: bash .github/scripts/setup-agent-env.sh
+
+      - name: Run scribe agent
+        uses: fullsend-ai/fullsend@main
+        with:
+          agent: scribe
