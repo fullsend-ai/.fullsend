@@ -21,13 +21,20 @@ defaults:
 repos:
     .fullsend:
         enabled: false
+    agents:
+        enabled: true
     experiments:
         enabled: true
     fullsend:
         enabled: true
     metrics:
         enabled: true
-    triage-agent:
-        enabled: true
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
+    - https://raw.githubusercontent.com/fullsend-ai/agents/
+create_issues:
+    allow_targets:
+        orgs:
+            - fullsend-ai
+        repos:
+            - fullsend-ai/fullsend
