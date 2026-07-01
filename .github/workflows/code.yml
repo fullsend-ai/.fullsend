@@ -31,7 +31,7 @@ concurrency:
 
 jobs:
   code:
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-code.yml@main
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-code.yml@60e4a9e16f16157fdf61d26a2c73138192befe68 # v0.25.2
     with:
       event_type: ${{ inputs.event_type }}
       source_repo: ${{ inputs.source_repo }}
@@ -39,7 +39,7 @@ jobs:
       mint_url: ${{ vars.FULLSEND_MINT_URL }}
       gcp_region: ${{ vars.FULLSEND_GCP_REGION }}
       install_mode: per-org
-      fullsend_ai_ref: main
+      runner_image: ubuntu-24.04
     secrets:
       FULLSEND_GCP_WIF_PROVIDER: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
       FULLSEND_GCP_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
