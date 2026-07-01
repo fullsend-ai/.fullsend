@@ -1,0 +1,5 @@
+# This file is managed by fullsend. Do not edit it directly.
+# To customize, use customized/harness/ instead (see ADR-0035).
+base: https://raw.githubusercontent.com/fullsend-ai/fullsend/60e4a9e16f16157fdf61d26a2c73138192befe68/internal/scaffold/fullsend-repo/harness/fix.yaml#sha256=83a0e85a94c321c2a53239ef9efbe1f6cd7916689f42a042fd0e187e36e1a383
+role: coder
+slug: fullsend-ai-coder
