@@ -7,7 +7,7 @@ These descriptions serve two purposes:
 1. **For humans** — clarify scope and boundaries so team members place issues in the right column.
 2. **For the classification agent** — provide enough semantic detail to classify an issue into one of these categories when it clearly fits, or leave it unclassified when it does not. Labels are unreliable signals — always read the issue content to understand the nature of the work.
 
-Categories are listed in the priority order established at the July 1 planning session and the [July 2026 roadmap refresh](https://github.com/fullsend-ai/fullsend/pull/TODO). The ordering reflects team dot-voting decisions — it does not affect classification. An issue belongs in whichever category matches the nature of the work, regardless of where that category sits in this list.
+Categories are listed in the priority order established at the July 1 planning session and the [July 2026 roadmap refresh](https://github.com/fullsend-ai/fullsend/pull/2850). The ordering reflects team dot-voting decisions — it does not affect classification. An issue belongs in whichever category matches the nature of the work, regardless of where that category sits in this list.
 
 The valid category names are exactly the nine `##` headings below (without the leading number). No other values are valid.
 
