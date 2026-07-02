@@ -29,6 +29,8 @@ repos:
         enabled: true
     metrics:
         enabled: true
+agents:
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/ffcb539dbd4781c933ef8a0038c500638ad61ab8/harness/triage.yaml#sha256=d6796509ebba315659153f0c2570ef3b4ec30431fd5d3f1cf13a9a21b427750c
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
