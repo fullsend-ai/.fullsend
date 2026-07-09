@@ -36,6 +36,7 @@ agents:
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/d0c8a34a8de55e631dea5894eb550b7b56b6212d/harness/review.yaml#sha256=08456e534c7d1251b3a3b2bc1236643403809ecab27832c273764769f219a45b
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/d0c8a34a8de55e631dea5894eb550b7b56b6212d/harness/retro.yaml#sha256=8be74d42aa94ed0083fd1a915f9903435d797b801b3866acd7e8249830388835
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/d0c8a34a8de55e631dea5894eb550b7b56b6212d/harness/prioritize.yaml#sha256=21cf62dce54fce3ae23cf5e3dfe901d03b69bc5e91533288ffa772187b24e95d
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/e017eaa080f40ab8cc347b589b92c0847d571b28/harness/scribe.yaml#sha256=9e96965884c5942f61cf3967d8af9ef514a597a597f8549644b14442943d9557
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
