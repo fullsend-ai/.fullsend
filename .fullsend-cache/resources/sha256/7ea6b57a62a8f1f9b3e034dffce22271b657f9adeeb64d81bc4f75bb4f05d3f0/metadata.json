@@ -1,0 +1,13 @@
+{
+  "url": "https://raw.githubusercontent.com/fullsend-ai/agents/6f67beb14bea8b51f362ecdb24b9db5f4b5c8a9f/skills/issue-labels/SKILL.md",
+  "fetch_time": "2026-07-09T09:01:02.281471749Z",
+  "sha256": "7ea6b57a62a8f1f9b3e034dffce22271b657f9adeeb64d81bc4f75bb4f05d3f0",
+  "type": "directory",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "3fff750b4b639b399464fd35163d1d7f4566764a3fdc0f6239a9a71466115a7d"
+    }
+  ],
+  "full_listing": true
+}

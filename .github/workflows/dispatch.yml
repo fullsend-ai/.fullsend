@@ -1,7 +1,7 @@
 # This file is managed by fullsend. Do not edit it directly.
 # Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/dispatch.yml
 ---
-# lint-workflow-size: max-lines=470
+# lint-workflow-size: max-lines=475
 # Dispatcher workflow that routes events to agent workflows based on stage.
 # Routing logic determines the stage from event context — the shim only
 # forwards the raw event.  Adding a new stage requires only a case branch
@@ -20,7 +20,7 @@ permissions: {}
 
 jobs:
   dispatch:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       actions: write
       contents: read
@@ -187,7 +187,9 @@ jobs:
                   STAGE="triage"
                 fi
               elif [[ "${EVENT_ACTION}" == "labeled" ]]; then
-                if [[ "${TRIGGERING_LABEL}" == "ready-to-code" ]]; then
+                if [[ "${TRIGGERING_LABEL}" == "ready-for-triage" ]]; then
+                  STAGE="triage"
+                elif [[ "${TRIGGERING_LABEL}" == "ready-to-code" ]]; then
                   STAGE="code"
                 elif [[ "${TRIGGERING_LABEL}" == "ready-for-review" ]]; then
                   if [[ "${ISSUE_HAS_PR}" == "true" ]]; then
@@ -347,14 +349,18 @@ jobs:
           STAGE_ROLE="$STAGE"
           case "$STAGE" in
             code|fix) STAGE_ROLE="coder" ;;
-            retro|prioritize) STAGE_ROLE="fullsend" ;;
           esac
 
           ROLES=$(yq '.defaults.roles[]' config.yaml 2>/dev/null || echo "")
           if [[ -n "$ROLES" ]] && ! echo "$ROLES" | grep -Fqx "$STAGE_ROLE"; then
-            echo "::notice::Stage '$STAGE' skipped — role '$STAGE_ROLE' not in defaults.roles"
-            echo "skipped=true" >> "${GITHUB_OUTPUT}"
-            exit 0
+            # Backward compat: "fullsend" in roles implies retro + prioritize
+            if [[ "$STAGE" =~ ^(retro|prioritize)$ ]] && echo "$ROLES" | grep -Fqx "fullsend"; then
+              echo "::notice::Stage '$STAGE' allowed via 'fullsend' role — if customizing roles, add '$STAGE' explicitly"
+            else
+              echo "::notice::Stage '$STAGE' skipped — role '$STAGE_ROLE' not in defaults.roles"
+              echo "skipped=true" >> "${GITHUB_OUTPUT}"
+              exit 0
+            fi
           fi
 
       - name: Block fork PRs for fix stage

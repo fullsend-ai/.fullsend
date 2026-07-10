@@ -24,7 +24,7 @@ concurrency:
 jobs:
   dispatch:
     name: Find and dispatch issues for RICE scoring
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     permissions:
       actions: write
@@ -37,7 +37,7 @@ jobs:
 
       - name: Mint fullsend token
         id: app-token
-        uses: fullsend-ai/fullsend/.github/actions/mint-token@main
+        uses: fullsend-ai/fullsend/.github/actions/mint-token@v0
         with:
           role: fullsend
           repos: .fullsend
