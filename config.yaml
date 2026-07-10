@@ -20,7 +20,7 @@ defaults:
     auto_merge: false
 repos:
     .fullsend:
-        enabled: false
+        enabled: true
     agents:
         enabled: true
     experiments:
