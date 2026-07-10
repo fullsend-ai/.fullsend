@@ -6,7 +6,7 @@
       "customType": "regex",
       "fileMatch": ["^config\\.yaml$"],
       "matchStrings": [
-        "https://raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentDigest>[a-f0-9]{40})/"
+        "https://raw\\.githubusercontent\\.com/(?<depName>fullsend-ai/agents)/(?<currentDigest>[a-f0-9]{40})/"
       ],
       "datasource": "git-refs",
       "currentValue": "main"
@@ -21,6 +21,5 @@
         "executionMode": "update"
       }
     }
-  ],
-  "allowedPostUpgradeCommands": ["^bash hack/update-agent-hashes\\.sh "]
+  ]
 }
