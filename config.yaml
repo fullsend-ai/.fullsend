@@ -29,6 +29,13 @@ repos:
         enabled: true
     metrics:
         enabled: true
+agents:
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/triage.yaml
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/code.yaml
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/fix.yaml
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/review.yaml
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/retro.yaml
+    - source: https://raw.githubusercontent.com/fullsend-ai/agents/main/harness/prioritize.yaml
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
