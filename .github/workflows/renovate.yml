@@ -43,3 +43,4 @@ jobs:
           LOG_LEVEL: info
           RENOVATE_REPOSITORIES: ${{ github.repository }}
           RENOVATE_DRY_RUN: ${{ inputs.dry-run || 'false' }}
+          RENOVATE_ALLOWED_POST_UPGRADE_COMMANDS: '["^bash hack/update-agent-hashes\\.sh [a-f0-9]{40}$"]'
