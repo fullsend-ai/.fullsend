@@ -8,8 +8,8 @@
       "matchStrings": [
         "https://raw\\.githubusercontent\\.com/(?<depName>fullsend-ai/agents)/(?<currentDigest>[a-f0-9]{40})/"
       ],
-      "datasource": "git-refs",
-      "currentValue": "main"
+      "datasourceTemplate": "git-refs",
+      "currentValueTemplate": "main"
     }
   ],
   "packageRules": [
