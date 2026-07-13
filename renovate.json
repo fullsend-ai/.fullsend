@@ -4,7 +4,9 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^config\\.yaml$"],
+      "managerFilePatterns": [
+        "/^config\\.yaml$/"
+      ],
       "matchStrings": [
         "https://raw\\.githubusercontent\\.com/(?<depName>fullsend-ai/agents)/(?<currentDigest>[a-f0-9]{40})/"
       ],
