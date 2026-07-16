@@ -18,6 +18,7 @@
   "packageRules": [
     {
       "matchDepNames": ["fullsend-ai/agents"],
+      "automerge": true,
       "postUpgradeTasks": {
         "commands": ["bash hack/update-agent-hashes.sh {{{newDigest}}}"],
         "fileFilters": ["config.yaml"],
