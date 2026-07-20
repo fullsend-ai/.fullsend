@@ -4,23 +4,26 @@
   "customManagers": [
     {
       "customType": "regex",
-      "fileMatch": ["^config\\.yaml$"],
-      "matchStrings": [
-        "https://raw\\.githubusercontent\\.com/(?<depName>[^/]+/[^/]+)/(?<currentDigest>[a-f0-9]{40})/"
+      "managerFilePatterns": [
+        "/^config\\.yaml$/"
       ],
-      "datasource": "git-refs",
-      "currentValue": "main"
+      "matchStrings": [
+        "https://raw\\.githubusercontent\\.com/(?<depName>fullsend-ai/agents)/(?<currentDigest>[a-f0-9]{40})/"
+      ],
+      "datasourceTemplate": "git-refs",
+      "packageNameTemplate": "https://github.com/{{{depName}}}",
+      "currentValueTemplate": "main"
     }
   ],
   "packageRules": [
     {
       "matchDepNames": ["fullsend-ai/agents"],
+      "automerge": true,
       "postUpgradeTasks": {
         "commands": ["bash hack/update-agent-hashes.sh {{{newDigest}}}"],
         "fileFilters": ["config.yaml"],
         "executionMode": "update"
       }
     }
-  ],
-  "allowedPostUpgradeCommands": ["^bash hack/update-agent-hashes\\.sh "]
+  ]
 }
