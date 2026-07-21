@@ -54,10 +54,10 @@ jobs:
 
     steps:
       - name: Checkout .fullsend repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Checkout upstream defaults
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: fullsend-ai/fullsend
           ref: main
@@ -142,7 +142,7 @@ jobs:
           echo "repo=${TARGET}" >> "${GITHUB_OUTPUT}"
 
       - name: Checkout target repository
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           repository: ${{ steps.target.outputs.repo }}
           token: ${{ steps.contents-token.outputs.token }}
