@@ -183,6 +183,19 @@ jobs:
 
       - name: Run scribe agent
         uses: fullsend-ai/fullsend@main
+        env:
+          # Shared agents harness expects SCRIBE_* host vars (not the stripped
+          # names setup-agent-env.sh writes to GITHUB_ENV). Mirror gh-classify.
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          CONTENTS_TOKEN: ${{ steps.contents-token.outputs.token }}
+          SCRIBE_REPO: ${{ steps.target.outputs.repo }}
+          SCRIBE_SEARCH_QUERY: ${{ vars.SCRIBE_GDRIVE_SEARCH_QUERY }}
+          SCRIBE_NAME_FILTER: ${{ vars.SCRIBE_GDRIVE_NAME_FILTER || '' }}
+          SCRIBE_LOOKBACK_HOURS: ${{ steps.config.outputs.lookback }}
+          SCRIBE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
+          SCRIBE_MIN_CONFIDENCE: ${{ steps.config.outputs.min_confidence }}
+          SCRIBE_MODE: ${{ steps.config.outputs.mode }}
+          SCRIBE_SLACK_WEBHOOK_URL: ${{ secrets.SCRIBE_SLACK_WEBHOOK_URL }}
         with:
           agent: scribe
           github_token: ${{ steps.app-token.outputs.token }}
