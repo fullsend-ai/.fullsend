@@ -190,6 +190,7 @@ jobs:
           CONTENTS_TOKEN: ${{ steps.contents-token.outputs.token }}
           SCRIBE_REPO: ${{ steps.target.outputs.repo }}
           SCRIBE_SEARCH_QUERY: ${{ vars.SCRIBE_GDRIVE_SEARCH_QUERY }}
+          SCRIBE_NAME_FILTER: ${{ vars.SCRIBE_GDRIVE_NAME_FILTER || '' }}
           SCRIBE_LOOKBACK_HOURS: ${{ steps.config.outputs.lookback }}
           SCRIBE_DRY_RUN: ${{ steps.config.outputs.dry_run }}
           SCRIBE_MIN_CONFIDENCE: ${{ steps.config.outputs.min_confidence }}
