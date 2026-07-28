@@ -40,7 +40,8 @@ create_issues:
         repos:
             - fullsend-ai/fullsend
 agents:
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/2534c9ee0aec617fdc797fc7150397ec74202aec/harness/triage.yaml#sha256=f56cbb0a3c1cb71563aa1b2fb80ca9ecb922e4c832f886e8154e2e9beb6b56c6
+  - name: triage
+    source: harness/triage-custom.yaml
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/2534c9ee0aec617fdc797fc7150397ec74202aec/harness/code.yaml#sha256=63cce92226530aa2d5a3fe03cb2d8ae034c6a316e980d104ea1de327bbcc9b3d
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/2534c9ee0aec617fdc797fc7150397ec74202aec/harness/fix.yaml#sha256=64d33db0c7ef7180070d24540aa56eae34bbb827c6bfb80eace5cf62948cd6df
   - source: https://raw.githubusercontent.com/fullsend-ai/agents/2534c9ee0aec617fdc797fc7150397ec74202aec/harness/review.yaml#sha256=6b5cd38510ffe0526c46d8172371e9602634254841abe3e8a8e0ce183d9ef7b9

@@ -1,0 +1,17 @@
+base: https://raw.githubusercontent.com/fullsend-ai/agents/3760b3bb70de32596c1922332fb96e76cd9ebcd8/harness/triage.yaml#sha256=f56cbb0a3c1cb71563aa1b2fb80ca9ecb922e4c832f886e8154e2e9beb6b56c6
+role: triage
+slug: fullsend-ai-triage
+
+skills:
+  - skills/docs-triage-guard
+
+post_script: scripts/post-triage-custom.sh
+
+validation_loop:
+  script: scripts/validate-output-schema.sh
+  schema: schemas/triage-result-custom.schema.json
+  max_iterations: 2
+
+forge:
+  github:
+    post_script: scripts/post-triage-custom.sh
