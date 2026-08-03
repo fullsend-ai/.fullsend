@@ -1,0 +1,6 @@
+base: https://raw.githubusercontent.com/fullsend-ai/agents/a0fec953cd3c8b877af9821551b503df88d394d8/harness/triage.yaml#sha256=f56cbb0a3c1cb71563aa1b2fb80ca9ecb922e4c832f886e8154e2e9beb6b56c6
+role: triage
+slug: fullsend-ai-triage
+
+skills:
+  - skills/docs-triage-guard
