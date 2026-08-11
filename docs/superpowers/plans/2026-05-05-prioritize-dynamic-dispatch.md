@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-05-prioritize-dynamic-dispatch-design.md`
 
+> **Deprecation notice:** Local `harness/` and `env/` paths referenced in
+> this plan have been removed. Agents are now resolved from `config.yaml`
+> entries pointing at `fullsend-ai/agents`.
+
 ---
 
 ### Task 1: Rewrite pre-prioritize.sh to validate issue URL from env
