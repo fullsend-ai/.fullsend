@@ -42,10 +42,11 @@ create_issues:
         repos:
             - fullsend-ai/fullsend
 agents:
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/triage.yaml#sha256=f56cbb0a3c1cb71563aa1b2fb80ca9ecb922e4c832f886e8154e2e9beb6b56c6
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/code.yaml#sha256=4e52817c68c57d3938fc80a5fb5cd91e6ecad2d5e7a0f51e604d7c07d5f79026
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/fix.yaml#sha256=5af5a1658ea36dd0982a475b08e51246224a52a3cdcfd805e837a16a286b6756
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/review.yaml#sha256=6b5cd38510ffe0526c46d8172371e9602634254841abe3e8a8e0ce183d9ef7b9
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/retro.yaml#sha256=8be74d42aa94ed0083fd1a915f9903435d797b801b3866acd7e8249830388835
-  - source: https://raw.githubusercontent.com/fullsend-ai/agents/937a16b672ac0b535660b358f89e2538afc0bf4b/harness/prioritize.yaml#sha256=21cf62dce54fce3ae23cf5e3dfe901d03b69bc5e91533288ffa772187b24e95d
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/triage.yaml#sha256=451122f4eb191fa79d42c814a412bb969c7d629a9a10284d6fcd1ce366d46ba5
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/code.yaml#sha256=2752012b4489288c87faebd315089bc2d89b671982de6a084e920e9972ce08be
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/fix.yaml#sha256=b0f99fecb73e922e95d7c18df657b75bd68b3dd8ca91a30d7eb68b995cd7b880
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/review.yaml#sha256=b8487a58b3aa2f0b608633d505415b57fd7b3e12df2aba3eb240823808f3ef55
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/retro.yaml#sha256=d1f3beb45bb369a8b5f1def5986a374861032a85174a3b84e34e1054a27f1933
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/prioritize.yaml#sha256=93afb2c50bfd828a37d29d24488d9492e541f254bf9153c768eda919e1fc9a33
+  - source: https://raw.githubusercontent.com/fullsend-ai/agents/89d35ec899c5824b4d98d01e579cffe3a5962928/harness/scribe.yaml#sha256=a23ccefdff1457939919fd225263d300b12ba34068689899b620a57f51cdebde
   - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/b26c947e95e6325284c5542d466a2a016f6aa312/harness/qualityflow.yaml#sha256=473d44a73c465b318fa3cd8dfee2c55b4a5dc7439f994607eb774825c43c17c2

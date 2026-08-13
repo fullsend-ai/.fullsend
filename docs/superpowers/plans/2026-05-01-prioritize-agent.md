@@ -10,6 +10,10 @@
 
 **Spec:** `docs/superpowers/specs/2026-05-01-prioritize-agent-design.md`
 
+> **Deprecation notice:** Local `harness/` and `env/` paths referenced in
+> this plan have been removed. Agents are now resolved from `config.yaml`
+> entries pointing at `fullsend-ai/agents`.
+
 ## Post-Implementation Changes
 
 The following changes were discovered during functional testing against

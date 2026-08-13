@@ -1,5 +1,0 @@
-# This file is managed by fullsend. Do not edit it directly.
-# To customize, use customized/harness/ instead (see ADR-0035).
-base: https://raw.githubusercontent.com/fullsend-ai/fullsend/60e4a9e16f16157fdf61d26a2c73138192befe68/internal/scaffold/fullsend-repo/harness/prioritize.yaml#sha256=35cabf9af3a8073fe00edb0da07eb2719f9a4b0700cb835905b78d09d4b57165
-role: prioritize
-slug: fullsend-ai-prioritize
