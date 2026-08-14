@@ -13,7 +13,7 @@ cp "$CONFIG" "$TMPFILE"
 
 sed -i -E "s|/agents/[a-f0-9]{40}/|/agents/${NEW_SHA}/|g" "$TMPFILE"
 
-grep -o 'harness/[^#]*\.yaml' "$TMPFILE" | while read -r path; do
+grep 'fullsend-ai/agents/' "$TMPFILE" | grep -o 'harness/[^#]*\.yaml' | while read -r path; do
     url="https://raw.githubusercontent.com/fullsend-ai/agents/${NEW_SHA}/${path}"
     if ! hash=$(curl -sfL "$url" | sha256sum | awk '{print $1}'); then
         echo "fetch failed: $url" >&2
