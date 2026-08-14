@@ -16,7 +16,6 @@ defaults:
         - review
         - retro
         - prioritize
-        - qualityflow
     runtime: claude
     max_implementation_retries: 2
     auto_merge: false
