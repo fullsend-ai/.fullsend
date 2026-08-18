@@ -29,7 +29,7 @@ repos:
     fullsend:
         enabled: true
     metrics:
-        enabled: true
+        enabled: false
 agents:
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/107b558888fb5c3eb76e2ac4e1754d33a65214e5/harness/triage.yaml#sha256=ca36c3b6f7cd2b722aa1c799f3c0d7b06b32c3b0bcc56641bd86c2fdcc8c0624
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/107b558888fb5c3eb76e2ac4e1754d33a65214e5/harness/code.yaml#sha256=195193a356e61e9a5180ea56ee1313c7901df9ef74b15b0ca9205f32787f5042
