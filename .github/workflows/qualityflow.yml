@@ -1,0 +1,233 @@
+# fullsend-stage: qualityflow
+# lint-workflow-size: max-lines=240
+name: QualityFlow
+
+# Stage workflow for the QualityFlow custom agent (BYOA).
+#
+# Dispatched by dispatch.yml when someone comments /fs-plan-tests on a PR.
+# dispatch.yml finds this file by the "fullsend-stage:" marker above and
+# triggers it via workflow_dispatch with the routed event payload.
+#
+# The QualityFlow harness is registered in config.yaml (agents[]) and is
+# fetched + sha256-verified by `fullsend run qualityflow` at run time. Its
+# host_files (env/*.env) and policy (policies/qf-unified.yaml) are read from
+# the runner, not fetched — so this workflow also checks out the QualityFlow
+# repo at the same pinned commit and layers those directories in.
+#
+# Deliberately self-contained here rather than a reusable workflow in fullsend
+# core: /fs-plan-tests belongs to a third-party agent and should not ship in the
+# shared scaffold. The durable path is migrating this org off per-org mode
+# (ADR 0044, #5815 `repos migrate`), after which reusable-dispatch.yml's
+# harness-dispatch job evaluates the harness CEL trigger and this file and the
+# dispatch.yml case below both go away.
+
+on:
+  workflow_dispatch:
+    inputs:
+      event_type:
+        required: true
+        type: string
+      source_repo:
+        required: true
+        type: string
+      event_payload:
+        required: true
+        type: string
+
+concurrency:
+  group: fullsend-qualityflow-${{ inputs.source_repo }}-${{ fromJSON(inputs.event_payload).pull_request.number || fromJSON(inputs.event_payload).issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  qualityflow:
+    name: QualityFlow
+    runs-on: ubuntu-24.04
+    # The harness allows 120 min; this bounds sandbox setup and layering on
+    # top of it, well below the 360-minute GitHub default.
+    timeout-minutes: 150
+    permissions:
+      actions: write
+      contents: read
+      id-token: write
+      issues: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout .fullsend repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Checkout upstream defaults
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: fullsend-ai/fullsend
+          ref: v0
+          path: .defaults
+          fetch-depth: 1
+          persist-credentials: false
+          sparse-checkout: |
+            .github/actions/
+            .github/scripts/
+            internal/scaffold/fullsend-repo/
+            action.yml
+
+      - name: Prepare workspace (upstream defaults + org overrides)
+        run: |
+          set -euo pipefail
+          SRC=".defaults/internal/scaffold/fullsend-repo"
+          LAYERED_DIRS="agents skills schemas harness plugins policies scripts env"
+          for dir in ${LAYERED_DIRS}; do
+            if [[ -d "${SRC}/${dir}" ]]; then
+              mkdir -p "${dir}"
+              cp -r "${SRC}/${dir}/." "${dir}/"
+            fi
+          done
+          mkdir -p .github/scripts
+          cp "${SRC}/.github/scripts/setup-agent-env.sh" .github/scripts/setup-agent-env.sh
+
+      - name: Resolve QualityFlow pin from config.yaml
+        id: qf-pin
+        run: |
+          set -euo pipefail
+          # Single source of truth: the commit-pinned agents[] entry in config.yaml.
+          # (.source // "") — disabled agent entries legitimately carry only a
+          # name, and test() on null aborts the whole expression.
+          SOURCE=$(yq -r '.agents[] | select((.source // "") | test("qualityflow-fullsend")) | .source' config.yaml | tail -1)
+          if [[ -z "${SOURCE}" || "${SOURCE}" == "null" ]]; then
+            echo "::error::No qualityflow-fullsend agent entry found in config.yaml"
+            exit 1
+          fi
+          SHA=$(printf '%s' "${SOURCE}" | sed -nE 's#.*/qualityflow-fullsend/([0-9a-f]{40})/.*#\1#p')
+          if [[ -z "${SHA}" ]]; then
+            echo "::error::Could not extract a 40-char commit SHA from: ${SOURCE}"
+            exit 1
+          fi
+          echo "sha=${SHA}" >> "${GITHUB_OUTPUT}"
+          echo "::notice::QualityFlow pinned at ${SHA}"
+
+      - name: Checkout QualityFlow integration repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: redhat-community-ai-tools/qualityflow-fullsend
+          ref: ${{ steps.qf-pin.outputs.sha }}
+          path: .qualityflow
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Layer QualityFlow resources into workspace
+        run: |
+          set -euo pipefail
+          # host_files (env/*.env), policy, agent md, skills and schemas are read
+          # from the runner by `fullsend run`, so they must exist locally.
+          for dir in env policies schemas scripts plugins harness qualityflow; do
+            if [[ -d ".qualityflow/${dir}" ]]; then
+              mkdir -p "${dir}"
+              cp -r ".qualityflow/${dir}/." "${dir}/"
+            fi
+          done
+          rm -rf .qualityflow
+          test -f env/qf-credentials.env || { echo "::error::env/qf-credentials.env missing after layering"; exit 1; }
+          test -f policies/qf-unified.yaml || { echo "::error::policies/qf-unified.yaml missing after layering"; exit 1; }
+          # Before f6311b4 the qualityflow/ tree was a git submodule, so a plain
+          # checkout leaves it empty and the agent file cannot be found.
+          test -f qualityflow/agents/qualityflow.md || {
+            echo "::error::qualityflow/agents/qualityflow.md missing — config.yaml pin predates the vendored layout (needs f6311b4 or later)"
+            exit 1
+          }
+
+      - name: Validate enrollment and extract repo metadata
+        id: repo-parts
+        uses: ./.defaults/.github/actions/validate-enrollment
+        with:
+          source_repo: ${{ inputs.source_repo }}
+          install_mode: per-org
+
+      - name: Mint coder token
+        id: app-token
+        uses: ./.defaults/.github/actions/mint-token
+        with:
+          role: coder
+          repos: ${{ steps.repo-parts.outputs.name }}
+          mint_url: ${{ vars.FULLSEND_MINT_URL }}
+
+      - name: Resolve dispatched PR head
+        id: pr
+        env:
+          EVENT_PAYLOAD: ${{ inputs.event_payload }}
+        run: |
+          set -euo pipefail
+          HEAD_SHA=$(printf '%s' "${EVENT_PAYLOAD}" | jq -r '.pull_request.head.sha // ""')
+          HEAD_REF=$(printf '%s' "${EVENT_PAYLOAD}" | jq -r '.pull_request.head.ref // ""')
+          if [[ ! "${HEAD_SHA}" =~ ^[0-9a-f]{40}$ || -z "${HEAD_REF}" ]]; then
+            echo "::error::Routed payload carries no usable PR head (sha='${HEAD_SHA}' ref='${HEAD_REF}') — QualityFlow needs a pull request"
+            exit 1
+          fi
+          echo "sha=${HEAD_SHA}" >> "${GITHUB_OUTPUT}"
+          echo "ref=${HEAD_REF}" >> "${GITHUB_OUTPUT}"
+
+      - name: Checkout target repository at PR head
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ inputs.source_repo }}
+          # Immutable: the branch may advance or be force-pushed between
+          # dispatch and this checkout, and this agent commits to that branch.
+          ref: ${{ steps.pr.outputs.sha }}
+          token: ${{ steps.app-token.outputs.token }}
+          path: target-repo
+          fetch-depth: 1
+          persist-credentials: true
+
+      - name: Attach PR branch to the dispatched head
+        env:
+          # Via env, never inline — a branch name is attacker-influenced input.
+          HEAD_REF: ${{ steps.pr.outputs.ref }}
+          HEAD_SHA: ${{ steps.pr.outputs.sha }}
+        run: |
+          set -euo pipefail
+          # checkout@v7 leaves HEAD detached when ref is a SHA; the agent's
+          # push step derives its target branch from the current branch name.
+          git -C target-repo checkout -B "${HEAD_REF}" "${HEAD_SHA}"
+
+      - name: Setup GCP and prepare credentials
+        uses: ./.defaults/.github/actions/setup-gcp
+        with:
+          gcp_wif_provider: ${{ secrets.FULLSEND_GCP_WIF_PROVIDER }}
+          gcp_project_id: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+
+      - name: Setup agent environment
+        env:
+          AGENT_PREFIX: QF_
+          QF_GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          QF_TARGET_REPO_DIR: target-repo
+          QF_ANTHROPIC_VERTEX_PROJECT_ID: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+          QF_GOOGLE_CLOUD_PROJECT: ${{ secrets.FULLSEND_GCP_PROJECT_ID }}
+          QF_CLOUD_ML_REGION: ${{ vars.FULLSEND_GCP_REGION }}
+          # Jira is optional on the GitHub flow — empty values keep the
+          # qf-credentials.env expansion satisfied without Jira secrets.
+          QF_JIRA_BASE_URL: ${{ secrets.JIRA_URL || '' }}
+          QF_JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN || '' }}
+          QF_JIRA_USER_EMAIL: ${{ secrets.JIRA_EMAIL || '' }}
+        run: bash .github/scripts/setup-agent-env.sh
+
+      - name: Run qualityflow agent
+        uses: ./.defaults/
+        env:
+          # The harness reads GITHUB_ISSUE_URL + REPO_FULL_NAME from the host and
+          # rejects empty ${VAR}s. For issue_comment on a PR, issue.html_url is
+          # the PR URL, so this is always populated.
+          GITHUB_ISSUE_URL: ${{ fromJSON(inputs.event_payload).issue.html_url }}
+          REPO_FULL_NAME: ${{ inputs.source_repo }}
+          PR_NUMBER: ${{ fromJSON(inputs.event_payload).pull_request.number || fromJSON(inputs.event_payload).issue.number }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
+          TRIGGER_SOURCE: slash-command
+        with:
+          agent: qualityflow
+          github_token: ${{ steps.app-token.outputs.token }}
+          target-repo: target-repo
+          run-url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          status-repo: ${{ inputs.source_repo }}
+          status-number: ${{ fromJSON(inputs.event_payload).pull_request.number || fromJSON(inputs.event_payload).issue.number }}
+          mint-url: ${{ vars.FULLSEND_MINT_URL }}
+          pr-head-sha: ${{ steps.pr.outputs.sha }}
