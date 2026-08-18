@@ -168,7 +168,9 @@ jobs:
                 /fs-plan-tests)
                   # QualityFlow custom agent. Mirrors its harness CEL trigger
                   # (change_proposal, non-fork); fork gate is in "Resolve PR
-                  # head" below. Interim until CEL dispatch is primary (#2902).
+                  # head" below. Org-local only — the command must not enter the
+                  # upstream scaffold. Removed when this org leaves per-org mode
+                  # (ADR 0044 / #2302), which deletes this dispatcher.
                   if [[ "${COMMENT_USER_TYPE}" != "Bot" ]] && is_authorized \
                     && [[ "${ISSUE_HAS_PR}" == "true" ]]; then
                     STAGE="qualityflow"
