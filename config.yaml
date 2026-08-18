@@ -23,7 +23,7 @@ repos:
     .fullsend:
         enabled: false
     agents:
-        enabled: true
+        enabled: false
     experiments:
         enabled: false
     fullsend:
