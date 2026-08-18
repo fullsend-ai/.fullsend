@@ -36,7 +36,7 @@ jobs:
 
   retro:
     needs: debounce
-    uses: fullsend-ai/fullsend/.github/workflows/reusable-retro.yml@v0
+    uses: fullsend-ai/fullsend/.github/workflows/reusable-retro.yml@main
     with:
       event_type: ${{ inputs.event_type }}
       source_repo: ${{ inputs.source_repo }}
