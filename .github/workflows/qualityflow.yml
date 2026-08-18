@@ -215,13 +215,14 @@ jobs:
         env:
           # The harness reads GITHUB_ISSUE_URL + REPO_FULL_NAME from the host and
           # rejects empty ${VAR}s. For issue_comment on a PR, issue.html_url is
-          # the PR URL, so this is always populated.
-          GITHUB_ISSUE_URL: ${{ fromJSON(inputs.event_payload).issue.html_url }}
+          # the PR URL; for the `ready-tests` label route the payload is the
+          # pull_request itself, so fall back to pull_request.html_url.
+          GITHUB_ISSUE_URL: ${{ fromJSON(inputs.event_payload).issue.html_url || fromJSON(inputs.event_payload).pull_request.html_url }}
           REPO_FULL_NAME: ${{ inputs.source_repo }}
           PR_NUMBER: ${{ fromJSON(inputs.event_payload).pull_request.number || fromJSON(inputs.event_payload).issue.number }}
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
-          TRIGGER_SOURCE: slash-command
+          TRIGGER_SOURCE: ${{ fromJSON(inputs.event_payload).issue.html_url && 'slash-command' || 'ready-tests-label' }}
         with:
           agent: qualityflow
           github_token: ${{ steps.app-token.outputs.token }}
