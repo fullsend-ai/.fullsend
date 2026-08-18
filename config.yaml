@@ -39,6 +39,9 @@ agents:
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/107b558888fb5c3eb76e2ac4e1754d33a65214e5/harness/prioritize.yaml#sha256=fd0e89a74eb6cdff58f6e703a40ed54a9911ac2ac2328fd39804bf006f4200fa
     - source: https://raw.githubusercontent.com/fullsend-ai/agents/107b558888fb5c3eb76e2ac4e1754d33a65214e5/harness/scribe.yaml#sha256=3ac49476b414857058fa1142b77a64d93b3595551642fe9319456168f98bc749
     - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/f6311b4f30ee5c23c597dba07bccc8ac0aa991be/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
+    # QualityFlow on the `ready-tests` label (codecov check_run → label bridge). base: = pinned harness above.
+    - name: qualityflow-ready-tests
+      source: harness/qualityflow-ready-tests.yaml
 allowed_remote_resources:
     - https://raw.githubusercontent.com/fullsend-ai/fullsend/
     - https://raw.githubusercontent.com/fullsend-ai/agents/
