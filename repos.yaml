@@ -1,0 +1,9 @@
+# Manifest for fullsend-ai org per-repo installations.
+# Used by sync-scaffold.yml to converge scaffold files and variables.
+version: 1
+github:
+  mint_url: https://mint.fullsend.sh
+  repos:
+    - name: fullsend-ai/experiments
+    - name: fullsend-ai/metrics
+    - name: fullsend-ai/agents

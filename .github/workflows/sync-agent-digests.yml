@@ -1,0 +1,103 @@
+# Sync fullsend-ai/agents commit digests and content hashes across all
+# fullsend-ai repos that reference agent harness YAMLs in their config.
+#
+# Replaces the Renovate custom manager that previously handled this for
+# the .fullsend repo only. Covers both the per-org config (config.yaml)
+# and per-repo installs (.fullsend/config.yaml).
+#
+# Required setup:
+#   1. Set repository variable SYNC_APP_ID to the fullsend-ai-sync App ID.
+#   2. Set repository secret SYNC_PRIVATE_KEY to the App's PEM private key.
+#   3. The App must be installed on all target repos with contents:write.
+#   4. The App must be a bypass actor on each repo's branch ruleset.
+name: Sync Agent Digests
+
+on:
+  repository_dispatch:
+    types: [agents-updated]
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: sync-agent-digests
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository_owner == 'fullsend-ai'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        id: app-token
+        with:
+          app-id: ${{ vars.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_PRIVATE_KEY }}
+          owner: fullsend-ai
+
+      - name: Get latest agents commit
+        id: agents
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          sha=$(gh api repos/fullsend-ai/agents/commits/main --jq '.sha')
+          echo "sha=$sha" >> "$GITHUB_OUTPUT"
+          echo "Latest agents commit: $sha"
+
+      - name: Sync .fullsend (per-org config)
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          NEW_SHA: ${{ steps.agents.outputs.sha }}
+        run: |
+          bash hack/update-agent-hashes.sh "$NEW_SHA"
+          if git diff --quiet config.yaml; then
+            echo ".fullsend already up to date"
+            exit 0
+          fi
+          git config user.name "fullsend-ai-sync[bot]"
+          git config user.email "4648700+fullsend-ai-sync[bot]@users.noreply.github.com"
+          git remote set-url origin "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/.fullsend.git"
+          git add config.yaml
+          git commit -m "chore: bump agents digest to ${NEW_SHA:0:7}"
+          git push origin HEAD:refs/heads/main
+          echo "Updated .fullsend to $NEW_SHA"
+
+      - name: Sync per-repo installs
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          NEW_SHA: ${{ steps.agents.outputs.sha }}
+        run: |
+          for repo in experiments metrics agents fullsend; do
+            echo "--- $repo ---"
+            dir=$(mktemp -d)
+            git clone --depth 1 \
+              "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/${repo}.git" \
+              "$dir" 2>/dev/null
+
+            config="$dir/.fullsend/config.yaml"
+            if [[ ! -f "$config" ]]; then
+              echo "No .fullsend/config.yaml, skipping"
+              rm -rf "$dir"
+              continue
+            fi
+
+            bash hack/update-agent-hashes.sh "$NEW_SHA" "$config"
+
+            if git -C "$dir" diff --quiet .fullsend/config.yaml; then
+              echo "$repo already up to date"
+              rm -rf "$dir"
+              continue
+            fi
+
+            git -C "$dir" config user.name "fullsend-ai-sync[bot]"
+            git -C "$dir" config user.email "4648700+fullsend-ai-sync[bot]@users.noreply.github.com"
+            git -C "$dir" add .fullsend/config.yaml
+            git -C "$dir" commit -m "chore: bump agents digest to ${NEW_SHA:0:7}"
+            git -C "$dir" push origin HEAD:refs/heads/main
+            echo "Updated $repo to $NEW_SHA"
+            rm -rf "$dir"
+          done

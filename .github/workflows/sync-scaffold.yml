@@ -1,0 +1,57 @@
+# Sync scaffold files (per-repo workflow shims, variables) across all
+# fullsend-ai per-repo installs whenever fullsend main is updated.
+#
+# Builds the fullsend CLI from the triggering commit and runs
+# `fullsend repos install` to converge scaffold refs and variables.
+#
+# Required setup:
+#   1. Set repository variable SYNC_APP_ID to the fullsend-ai-sync App ID.
+#   2. Set repository secret SYNC_PRIVATE_KEY to the App's PEM private key.
+#   3. The App must be installed on all target repos with contents:write.
+#   4. The App must be a bypass actor on each repo's branch ruleset.
+name: Sync Scaffold
+
+on:
+  repository_dispatch:
+    types: [fullsend-updated]
+  workflow_dispatch: {}
+
+permissions: {}
+
+concurrency:
+  group: sync-scaffold
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    if: github.repository_owner == 'fullsend-ai'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: main
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        id: app-token
+        with:
+          app-id: ${{ vars.SYNC_APP_ID }}
+          private-key: ${{ secrets.SYNC_PRIVATE_KEY }}
+          owner: fullsend-ai
+
+      - name: Build fullsend CLI
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          dir=$(mktemp -d)
+          git clone --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/fullsend.git" \
+            "$dir"
+          cd "$dir"
+          go build -o /usr/local/bin/fullsend ./cmd/fullsend
+          echo "Built fullsend from $(git rev-parse --short HEAD)"
+
+      - name: Converge per-repo installs
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          fullsend repos install -f repos.yaml --direct --force
