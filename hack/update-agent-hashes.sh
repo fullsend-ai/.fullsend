@@ -2,9 +2,9 @@
 set -euo pipefail
 
 NEW_SHA="${1:-}"
-[[ $# -eq 1 && "$NEW_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo "usage: $0 <40-char-sha>" >&2; exit 1; }
-
-CONFIG="config.yaml"
+CONFIG="${2:-config.yaml}"
+[[ -n "$NEW_SHA" && "$NEW_SHA" =~ ^[a-f0-9]{40}$ ]] || { echo "usage: $0 <40-char-sha> [config-file]" >&2; exit 1; }
+[[ -f "$CONFIG" ]] || { echo "config file not found: $CONFIG" >&2; exit 1; }
 CONFIG_DIR=$(dirname "$CONFIG")
 TMPFILE=$(mktemp -p "$CONFIG_DIR" "$(basename "$CONFIG").tmp.XXXXXX")
 trap 'rm -f "$TMPFILE"' EXIT
