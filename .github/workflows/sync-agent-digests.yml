@@ -2,8 +2,7 @@
 # fullsend-ai repos that reference agent harness YAMLs in their config.
 #
 # Replaces the Renovate custom manager that previously handled this for
-# the .fullsend repo only. Covers both the per-org config (config.yaml)
-# and per-repo installs (.fullsend/config.yaml).
+# the .fullsend repo only. Updates per-repo installs (.fullsend/config.yaml).
 #
 # Required setup:
 #   1. Set repository variable SYNC_CLIENT_ID to the fullsend-ai-sync App Client ID.
@@ -48,23 +47,6 @@ jobs:
           sha=$(gh api repos/fullsend-ai/agents/commits/main --jq '.sha')
           echo "sha=$sha" >> "$GITHUB_OUTPUT"
           echo "Latest agents commit: $sha"
-
-      - name: Sync .fullsend (per-org config)
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          NEW_SHA: ${{ steps.agents.outputs.sha }}
-        run: |
-          bash hack/update-agent-hashes.sh "$NEW_SHA"
-          if git diff --quiet config.yaml; then
-            echo ".fullsend already up to date"
-            exit 0
-          fi
-          git config user.name "fullsend-ai-sync[bot]"
-          git config user.email "4648700+fullsend-ai-sync[bot]@users.noreply.github.com"
-          git add config.yaml
-          git commit -m "chore: bump agents digest to ${NEW_SHA:0:7}"
-          git push origin HEAD:refs/heads/main
-          echo "Updated .fullsend to $NEW_SHA"
 
       - name: Sync per-repo installs
         env:
