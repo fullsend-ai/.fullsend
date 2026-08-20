@@ -27,7 +27,7 @@ repos:
     experiments:
         enabled: false
     fullsend:
-        enabled: true
+        enabled: false
     metrics:
         enabled: false
 agents:
