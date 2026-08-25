@@ -226,6 +226,11 @@ jobs:
                 labeled)
                   if [[ "${TRIGGERING_LABEL}" == "ready-for-review" ]]; then
                     STAGE="review"
+                  elif [[ "${TRIGGERING_LABEL}" == "ready-tests" ]]; then
+                    # QualityFlow via codecov label bridge (mirrors harness/qualityflow-ready-tests.yaml CEL); it pushes to the PR branch, so never on forks.
+                    if [[ -n "${PR_HEAD_REPO}" && "${PR_HEAD_REPO}" == "${PR_BASE_REPO}" ]]; then
+                      STAGE="qualityflow"
+                    fi
                   fi
                   ;;
                 closed)
