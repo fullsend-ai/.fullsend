@@ -48,7 +48,7 @@ These are set on the `.fullsend` repository (or at the org level) and control be
 |--------|----------|-------------|
 | `FULLSEND_GCP_SA_KEY_JSON` | **Yes** | GCP Service Account key (JSON) with Vertex AI access. Shared with other agents. |
 | `SCRIBE_GCP_SA_KEY_JSON` | **Yes** | GCP Service Account key (JSON) with `drive.readonly` scope. This SA must be invited to the Google Calendar meeting so it has access to the auto-generated notes. **Separate from the Vertex AI SA.** |
-| `FULLSEND_TRIAGE_APP_PRIVATE_KEY` | **Yes** | Private key for the `fullsend-ai-triage` GitHub App (issues:write). Shared with the triage agent. |
+| `FULLSEND_SCRIBE_APP_PRIVATE_KEY` | **Yes** | Private key for the `fullsend-ai-scribe` GitHub App (issues:write). |
 | `FULLSEND_CODER_APP_PRIVATE_KEY` | **Yes** | Private key for the `fullsend-ai-coder` GitHub App (contents:read). Shared with the coder agent. |
 | `SCRIBE_SLACK_WEBHOOK_URL` | No | Slack incoming webhook URL. If set, a summary is posted after each run. |
 | `FULLSEND_GCP_PROJECT_ID` | **Yes** | GCP project ID for Vertex AI. Shared with other agents. |
@@ -57,7 +57,7 @@ These are set on the `.fullsend` repository (or at the org level) and control be
 
 | Variable | Required | Description |
 |----------|----------|-------------|
-| `FULLSEND_TRIAGE_CLIENT_ID` | **Yes** | Client ID for the triage GitHub App. Shared. |
+| `FULLSEND_SCRIBE_CLIENT_ID` | **Yes** | Client ID for the scribe GitHub App. |
 | `FULLSEND_CODER_CLIENT_ID` | **Yes** | Client ID for the coder GitHub App. Shared. |
 
 ### Manual dispatch inputs
@@ -234,7 +234,7 @@ If `SCRIBE_SLACK_WEBHOOK_URL` is set, a summary is posted after each run with:
 
 2. **Vertex AI SA**: Ensure `FULLSEND_GCP_SA_KEY_JSON` (shared) has `aiplatform.endpoints.predict` permission.
 
-3. **GitHub Apps**: Ensure the triage app (`FULLSEND_TRIAGE_CLIENT_ID` / `FULLSEND_TRIAGE_APP_PRIVATE_KEY`) is installed on the target repo with `issues:write`, and the coder app (`FULLSEND_CODER_CLIENT_ID` / `FULLSEND_CODER_APP_PRIVATE_KEY`) with `contents:read`.
+3. **GitHub Apps**: Ensure the scribe app (`FULLSEND_SCRIBE_CLIENT_ID` / `FULLSEND_SCRIBE_APP_PRIVATE_KEY`) is installed on the target repo with `issues:write`, and the coder app (`FULLSEND_CODER_CLIENT_ID` / `FULLSEND_CODER_APP_PRIVATE_KEY`) with `contents:read`.
 
 4. **Repo variable**: Set `SCRIBE_GDRIVE_SEARCH_QUERY` to match your meeting note names (e.g., `fullsend team sync`).
 
