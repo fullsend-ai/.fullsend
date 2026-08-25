@@ -1,20 +1,40 @@
-# This file is managed by fullsend. Do not edit it directly.
-# Upstream: https://github.com/fullsend-ai/fullsend/blob/main/internal/scaffold/fullsend-repo/.github/workflows/prioritize-scheduler.yml
 ---
-# lint-workflow-size: max-lines=220
 name: Prioritize Scheduler
 
 on:
-  # TODO: Re-enable once we have a first-class way to enable/disable
-  # schedule-based agents per org. Until then, keep commented out to avoid
-  # noisy Action runs in orgs that haven't configured the prioritize agent.
-  # schedule:
-  #   - cron: '*/10 * * * *'
+  schedule:
+    - cron: '*/10 * * * *'
   workflow_dispatch:
     inputs:
-      wip_limit:
-        description: "Max number of prioritize jobs to dispatch (overrides PRIORITIZE_WIP_LIMIT variable)"
+      project_number:
+        description: "GitHub Project number to poll"
         required: false
+        default: "1"
+        type: string
+      repos:
+        description: "Comma-separated repo names to dispatch to"
+        required: false
+        default: "fullsend,agents,experiments,metrics"
+        type: string
+      score_field:
+        description: "Project board field name for the RICE score"
+        required: false
+        default: "RICE Score"
+        type: string
+      workflow:
+        description: "Workflow filename to dispatch on target repos"
+        required: false
+        default: "prioritize.yml"
+        type: string
+      stale_threshold:
+        description: "Re-score issues whose RICE score is older than this (e.g. 7d, 24h)"
+        required: false
+        default: "7d"
+        type: string
+      wip_limit:
+        description: "Max number of prioritize jobs to dispatch"
+        required: false
+        default: "5"
         type: number
 
 concurrency:
@@ -29,36 +49,42 @@ jobs:
     permissions:
       actions: write
       contents: read
-      id-token: write
 
     steps:
-      - name: Checkout .fullsend repository
+      - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - name: Mint fullsend token
-        id: app-token
-        uses: fullsend-ai/fullsend/.github/actions/mint-token@main
+      - name: Generate prioritize token (project board access)
+        id: prioritize-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         with:
-          role: fullsend
-          repos: .fullsend
-          mint_url: ${{ vars.FULLSEND_MINT_URL }}
+          client-id: ${{ vars.FULLSEND_PRIORITIZE_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_PRIORITIZE_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+
+      - name: Generate fullsend token (cross-repo dispatch)
+        id: dispatch-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        with:
+          client-id: ${{ vars.FULLSEND_FULLSEND_CLIENT_ID }}
+          private-key: ${{ secrets.FULLSEND_FULLSEND_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ inputs.repos }}
 
       - name: Find issues and dispatch prioritize runs
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ steps.prioritize-token.outputs.token }}
+          DISPATCH_TOKEN: ${{ steps.dispatch-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          PROJECT_NUMBER: ${{ vars.FULLSEND_PROJECT_NUMBER }}
-          WIP_LIMIT: ${{ inputs.wip_limit || vars.PRIORITIZE_WIP_LIMIT || '5' }}
-          STALE_THRESHOLD: ${{ vars.PRIORITIZE_STALE_THRESHOLD || '7d' }}
+          PROJECT_NUMBER: ${{ inputs.project_number }}
+          SCORE_FIELD: ${{ inputs.score_field }}
+          STALE_THRESHOLD: ${{ inputs.stale_threshold }}
+          WORKFLOW: ${{ inputs.workflow }}
+          WIP_LIMIT: ${{ inputs.wip_limit }}
         run: |
           set -euo pipefail
 
-          if [[ -z "${PROJECT_NUMBER}" ]]; then
-            echo "::notice::FULLSEND_PROJECT_NUMBER is not set; skipping prioritize scheduler."
-            exit 0
-          fi
-
-          # --- Parse stale threshold into seconds ---
+          # Parse stale threshold into seconds
           parse_threshold() {
             local val="${1%[dh]}"
             local unit="${1: -1}"
@@ -70,113 +96,108 @@ jobs:
           }
           THRESHOLD_SECONDS=$(parse_threshold "${STALE_THRESHOLD}")
 
-          # --- Fetch project metadata ---
-          PROJECT_ID=$(gh project view "${PROJECT_NUMBER}" --owner "${ORG}" --format json | jq -r '.id')
+          # Fetch project metadata
+          PROJECT_ID=$(gh project view "${PROJECT_NUMBER}" \
+            --owner "${ORG}" --format json | jq -r '.id')
 
-          SCORE_FIELD_ID=$(gh project field-list "${PROJECT_NUMBER}" --owner "${ORG}" --format json \
-            | jq -r '.fields[] | select(.name == "RICE Score") | .id')
-
-          if [[ -z "${SCORE_FIELD_ID}" ]]; then
-            echo "ERROR: 'RICE Score' field not found on project ${PROJECT_NUMBER}."
-            echo "Run scripts/setup-prioritize.sh first."
+          if [[ -z "${PROJECT_ID}" || "${PROJECT_ID}" == "null" ]]; then
+            echo "ERROR: Failed to fetch project ${PROJECT_NUMBER}."
             exit 1
           fi
 
-          # --- Paginate through all project items ---
-          ITEMS_JSON='{"data":{"node":{"items":{"nodes":[]}}}}'
-          HAS_NEXT_PAGE=true
-          CURSOR=""
+          SCORE_FIELD_ID=$(gh project field-list "${PROJECT_NUMBER}" \
+            --owner "${ORG}" --format json \
+            | jq -r --arg sf "${SCORE_FIELD}" '.fields[] | select(.name == $sf) | .id')
 
-          while [[ "${HAS_NEXT_PAGE}" == "true" ]]; do
-            # $cursor is declared as nullable (String, not String!) so the
-            # same query works for the first page (no cursor arg → null)
-            # and subsequent pages (cursor arg provided).
-            PAGE_JSON=$(gh api graphql -f query='
+          if [[ -z "${SCORE_FIELD_ID}" ]]; then
+            echo "ERROR: '${SCORE_FIELD}' field not found on project."
+            echo "Run scripts/setup-prioritize.sh to create it."
+            exit 1
+          fi
+
+          # Paginate through all project items (100 per page).
+          ALL_ITEMS="[]"
+          CURSOR=""
+          while true; do
+            CURSOR_ARG=""
+            if [[ -n "${CURSOR}" ]]; then
+              CURSOR_ARG="-f cursor=${CURSOR}"
+            fi
+            PAGE=$(gh api graphql -f query='
               query($projectId: ID!, $cursor: String) {
                 node(id: $projectId) {
                   ... on ProjectV2 {
                     items(first: 100, after: $cursor) {
-                      pageInfo {
-                        hasNextPage
-                        endCursor
-                      }
+                      pageInfo { hasNextPage endCursor }
                       nodes {
-                        id
-                        fieldValues(first: 20) {
-                          nodes {
-                            ... on ProjectV2ItemFieldNumberValue {
-                              field { ... on ProjectV2Field { id name } }
-                              number
-                              updatedAt
-                            }
+                        fieldValues(first: 20) { nodes {
+                          ... on ProjectV2ItemFieldNumberValue {
+                            field { ... on ProjectV2Field { id } }
+                            updatedAt
                           }
-                        }
-                        content {
-                          ... on Issue {
-                            url
-                            number
-                            state
-                          }
-                        }
+                        } }
+                        content { ... on Issue { url number state } }
                       }
                     }
                   }
                 }
-              }
-            ' -f projectId="${PROJECT_ID}" ${CURSOR:+-f cursor="${CURSOR}"})
+              }' -f projectId="${PROJECT_ID}" ${CURSOR_ARG})
 
-            ITEMS_JSON=$(jq -s '
-              .[0].data.node.items.nodes += .[1].data.node.items.nodes
-              | .[0]
-            ' <(echo "${ITEMS_JSON}") <(echo "${PAGE_JSON}"))
+            ALL_ITEMS=$(echo "${ALL_ITEMS}" | jq \
+              --argjson page "$(echo "${PAGE}" \
+                | jq '[.data.node.items.nodes[]]')" \
+              '. + $page')
 
-            HAS_NEXT_PAGE=$(echo "${PAGE_JSON}" | jq -r '.data.node.items.pageInfo.hasNextPage')
-            CURSOR=$(echo "${PAGE_JSON}" | jq -r '.data.node.items.pageInfo.endCursor')
+            HAS_NEXT=$(echo "${PAGE}" \
+              | jq -r '.data.node.items.pageInfo.hasNextPage')
+            if [[ "${HAS_NEXT}" != "true" ]]; then
+              break
+            fi
+            CURSOR=$(echo "${PAGE}" \
+              | jq -r '.data.node.items.pageInfo.endCursor')
           done
 
-          TOTAL=$(echo "${ITEMS_JSON}" | jq '.data.node.items.nodes | length')
-          echo "Fetched ${TOTAL} project items."
-
-          # --- Find unscored open issues (up to WIP_LIMIT) ---
-          UNSCORED_ISSUES=$(echo "${ITEMS_JSON}" | jq -r --arg fid "${SCORE_FIELD_ID}" --argjson limit "${WIP_LIMIT}" '
-            [.data.node.items.nodes[]
+          # Find unscored open issues (up to WIP_LIMIT)
+          UNSCORED=$(echo "${ALL_ITEMS}" | jq -r \
+            --arg fid "${SCORE_FIELD_ID}" --argjson limit "${WIP_LIMIT}" '
+            [.[]
              | select(.content.state == "OPEN")
              | select(.content.url != null)
-             | select(
-                 [.fieldValues.nodes[]
-                  | select(.field.id == $fid)
-                 ] | length == 0
-               )
+             | select([.fieldValues.nodes[]
+                       | select(.field.id == $fid)] | length == 0)
              | {url: .content.url, number: .content.number}
-            ] | .[:$limit]
-          ')
+            ] | .[:$limit]')
 
-          UNSCORED_COUNT=$(echo "${UNSCORED_ISSUES}" | jq 'length')
-
-          if [[ "${UNSCORED_COUNT}" -gt 0 ]]; then
-            echo "Found ${UNSCORED_COUNT} unscored issue(s) to dispatch."
+          COUNT=$(echo "${UNSCORED}" | jq 'length')
+          if [[ "${COUNT}" -gt 0 ]]; then
+            echo "Found ${COUNT} unscored issue(s) to dispatch."
           else
             echo "All issues scored. Checking for stale scores..."
 
             NOW_EPOCH=$(date +%s)
 
-            UNSCORED_ISSUES=$(echo "${ITEMS_JSON}" | jq -r --arg fid "${SCORE_FIELD_ID}" --argjson limit "${WIP_LIMIT}" --argjson threshold "${THRESHOLD_SECONDS}" --argjson now "${NOW_EPOCH}" '
-              [.data.node.items.nodes[]
+            UNSCORED=$(echo "${ALL_ITEMS}" | jq -r \
+              --arg fid "${SCORE_FIELD_ID}" \
+              --argjson limit "${WIP_LIMIT}" \
+              --argjson threshold "${THRESHOLD_SECONDS}" \
+              --argjson now "${NOW_EPOCH}" '
+              [.[]
                | select(.content.state == "OPEN")
                | select(.content.url != null)
                | {
                    url: .content.url,
                    number: .content.number,
-                   updatedAt: ([.fieldValues.nodes[] | select(.field.id == $fid) | .updatedAt] | first)
+                   updatedAt: ([.fieldValues.nodes[]
+                                | select(.field.id == $fid)
+                                | .updatedAt] | first)
                  }
                | select(.updatedAt != null)
                | select(($now - (.updatedAt | fromdateiso8601)) > $threshold)
               ]
               | sort_by(.updatedAt)
-              | .[:$limit]
-            ')
+              | .[:$limit]')
 
-            STALE_COUNT=$(echo "${UNSCORED_ISSUES}" | jq 'length')
+            STALE_COUNT=$(echo "${UNSCORED}" | jq 'length')
 
             if [[ "${STALE_COUNT}" -eq 0 ]]; then
               echo "No stale scores found. Nothing to do."
@@ -186,16 +207,17 @@ jobs:
             echo "Found ${STALE_COUNT} stale issue(s) to re-score."
           fi
 
-          # --- Dispatch prioritize runs ---
           DISPATCHED=0
           FAILED=0
 
-          for row in $(echo "${UNSCORED_ISSUES}" | jq -c '.[]'); do
+          for row in $(echo "${UNSCORED}" | jq -c '.[]'); do
             ISSUE_URL=$(echo "${row}" | jq -r '.url')
             ISSUE_NUMBER=$(echo "${row}" | jq -r '.number')
-            SOURCE_REPO=$(echo "${ISSUE_URL}" | sed 's|https://github.com/||; s|/issues/.*||')
+            SOURCE_REPO="${ISSUE_URL#https://github.com/}"
+            SOURCE_REPO="${SOURCE_REPO%%/issues/*}"
 
-            if [[ ! "${SOURCE_REPO}" =~ ^${ORG}/ ]]; then
+            # Skip issues from outside this org
+            if [[ "${SOURCE_REPO}" != "${ORG}/"* ]]; then
               echo "::warning::Skipping issue from unexpected org: ${SOURCE_REPO}"
               continue
             fi
@@ -207,11 +229,12 @@ jobs:
 
             echo "Dispatching prioritize for ${SOURCE_REPO}#${ISSUE_NUMBER}..."
 
-            if gh workflow run prioritize.yml \
-              --repo "${GITHUB_REPOSITORY}" \
+            if GH_TOKEN="${DISPATCH_TOKEN}" gh workflow run "${WORKFLOW}" \
+              --repo "${SOURCE_REPO}" \
               -f event_type="schedule" \
               -f source_repo="${SOURCE_REPO}" \
-              -f event_payload="${EVENT_PAYLOAD}"; then
+              -f event_payload="${EVENT_PAYLOAD}" \
+              -f project_number="${PROJECT_NUMBER}"; then
               DISPATCHED=$((DISPATCHED + 1))
             else
               echo "::warning::Failed to dispatch for ${ISSUE_URL}"
