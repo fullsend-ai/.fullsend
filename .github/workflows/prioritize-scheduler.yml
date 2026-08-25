@@ -7,34 +7,28 @@ on:
   workflow_dispatch:
     inputs:
       project_number:
-        description: "GitHub Project number to poll"
+        description: "GitHub Project number to poll (default: 1)"
         required: false
-        default: "1"
         type: string
       repos:
-        description: "Comma-separated repo names to dispatch to"
+        description: "Comma-separated repo names to dispatch to (default: fullsend,agents,experiments,metrics)"
         required: false
-        default: "fullsend,agents,experiments,metrics"
         type: string
       score_field:
-        description: "Project board field name for the RICE score"
+        description: "Project board field name for the RICE score (default: RICE Score)"
         required: false
-        default: "RICE Score"
         type: string
       workflow:
-        description: "Workflow filename to dispatch on target repos"
+        description: "Workflow filename to dispatch on target repos (default: prioritize.yml)"
         required: false
-        default: "prioritize.yml"
         type: string
       stale_threshold:
-        description: "Re-score issues whose RICE score is older than this (e.g. 7d, 24h)"
+        description: "Re-score issues whose RICE score is older than this (default: 7d)"
         required: false
-        default: "7d"
         type: string
       wip_limit:
-        description: "Max number of prioritize jobs to dispatch"
+        description: "Max number of prioritize jobs to dispatch (default: 5)"
         required: false
-        default: "5"
         type: number
 
 concurrency:
@@ -69,18 +63,18 @@ jobs:
           client-id: ${{ vars.FULLSEND_FULLSEND_CLIENT_ID }}
           private-key: ${{ secrets.FULLSEND_FULLSEND_APP_PRIVATE_KEY }}
           owner: ${{ github.repository_owner }}
-          repositories: ${{ inputs.repos }}
+          repositories: ${{ inputs.repos || 'fullsend,agents,experiments,metrics' }}
 
       - name: Find issues and dispatch prioritize runs
         env:
           GH_TOKEN: ${{ steps.prioritize-token.outputs.token }}
           DISPATCH_TOKEN: ${{ steps.dispatch-token.outputs.token }}
           ORG: ${{ github.repository_owner }}
-          PROJECT_NUMBER: ${{ inputs.project_number }}
-          SCORE_FIELD: ${{ inputs.score_field }}
-          STALE_THRESHOLD: ${{ inputs.stale_threshold }}
-          WORKFLOW: ${{ inputs.workflow }}
-          WIP_LIMIT: ${{ inputs.wip_limit }}
+          PROJECT_NUMBER: ${{ inputs.project_number || '1' }}
+          SCORE_FIELD: ${{ inputs.score_field || 'RICE Score' }}
+          STALE_THRESHOLD: ${{ inputs.stale_threshold || '7d' }}
+          WORKFLOW: ${{ inputs.workflow || 'prioritize.yml' }}
+          WIP_LIMIT: ${{ inputs.wip_limit || '5' }}
         run: |
           set -euo pipefail
 
