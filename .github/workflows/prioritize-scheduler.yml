@@ -82,6 +82,9 @@ jobs:
           parse_threshold() {
             local val="${1%[dh]}"
             local unit="${1: -1}"
+            if [[ -z "${val}" || ! "${val}" =~ ^[0-9]+$ ]]; then
+              echo "ERROR: invalid threshold '${1}' (use Nd or Nh, e.g. 7d)" >&2; exit 1
+            fi
             case "${unit}" in
               d) echo $(( val * 86400 )) ;;
               h) echo $(( val * 3600 )) ;;
