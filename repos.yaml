@@ -97,12 +97,10 @@ github:
                         - fullsend-ai
                     repos:
                         - fullsend-ai/fullsend
+        # experiments dropped the QualityFlow harness (fullsend-ai/experiments#63): the
+        # pinned source no longer resolves, so it runs the fleet default agents only.
         - name: fullsend-ai/experiments
           config:
-            agents:
-                - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/b26c947e95e6325284c5542d466a2a016f6aa312/harness/qualityflow.yaml#sha256=473d44a73c465b318fa3cd8dfee2c55b4a5dc7439f994607eb774825c43c17c2
-            allowed_remote_resources:
-                - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
             create_issues:
                 allow_targets:
                     orgs:
