@@ -1,0 +1,78 @@
+# Plan step for manifest changes: on every pull request that touches
+# repos.yaml, run `fullsend repos status` and `fullsend repos install --dry-run`
+# with the CLI built from fullsend main and post both to the job summary.
+#
+# The check is informational (continue-on-error): repositories whose
+# .fullsend/config.yaml still lacks the managed marker make the dry run exit 1
+# until they are adopted, and that must not block the manifest edit that
+# describes them.
+name: Manifest Check
+
+on:
+  pull_request:
+    paths:
+      - repos.yaml
+      - .github/workflows/manifest-check.yml
+
+permissions: {}
+
+concurrency:
+  group: manifest-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  plan:
+    if: github.repository_owner == 'fullsend-ai'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        id: app-token
+        with:
+          client-id: ${{ vars.SYNC_CLIENT_ID }}
+          private-key: ${{ secrets.SYNC_PRIVATE_KEY }}
+          owner: fullsend-ai
+
+      - name: Build fullsend CLI
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          dir=$(mktemp -d)
+          git clone --depth 1 \
+            "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/fullsend.git" \
+            "$dir"
+          cd "$dir"
+          go build -o /usr/local/bin/fullsend ./cmd/fullsend
+          echo "Built fullsend from $(git rev-parse --short HEAD)"
+
+      - name: repos status
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -o pipefail
+          fullsend repos status -f repos.yaml 2>&1 | tee status.log || true
+          {
+            echo '## repos status'
+            echo
+            echo '```'
+            cat status.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: repos install --dry-run
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: |
+          set -o pipefail
+          fullsend repos install -f repos.yaml --dry-run --signoff=false 2>&1 | tee dryrun.log || true
+          {
+            echo '## repos install --dry-run'
+            echo
+            echo '```'
+            cat dryrun.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
