@@ -1,9 +1,11 @@
 # Converge every repository in repos.yaml to the manifest: shim workflow,
 # prioritize caller, managed .fullsend/config.yaml, variables and secrets.
 #
-# Runs on each fullsend release, weekly, and by hand (with a dry-run option).
-# Builds the fullsend CLI from the fullsend main branch, which is also what
-# github.fullsend_ref in repos.yaml points the shims at.
+# Runs when fullsend-ai/fullsend publishes a release (its notify-scaffold-sync
+# workflow dispatches fullsend-updated here; a release event of another
+# repository cannot trigger this workflow directly), weekly, and by hand (with
+# a dry-run option). Builds the fullsend CLI from the fullsend main branch,
+# which is also what github.fullsend_ref in repos.yaml points the shims at.
 #
 # Delivery is one pull request per drifted repository on the
 # fullsend/scaffold-install branch; repository owners merge on their own
@@ -17,8 +19,8 @@
 name: Sync Scaffold
 
 on:
-  release:
-    types: [published]
+  repository_dispatch:
+    types: [fullsend-updated]
   schedule:
     - cron: "0 6 * * 1"
   workflow_dispatch:
