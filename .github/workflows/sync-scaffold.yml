@@ -1,20 +1,36 @@
-# Sync scaffold files (per-repo workflow shims, variables) across all
-# fullsend-ai per-repo installs whenever fullsend main is updated.
+# Converge every repository in repos.yaml to the manifest: shim workflow,
+# prioritize caller, managed .fullsend/config.yaml, variables and secrets.
 #
-# Builds the fullsend CLI from the triggering commit and runs
-# `fullsend repos install` to converge scaffold refs and variables.
+# Runs on each fullsend release, weekly, and by hand (with a dry-run option).
+# Builds the fullsend CLI from the fullsend main branch, which is also what
+# github.fullsend_ref in repos.yaml points the shims at.
+#
+# Delivery is one pull request per drifted repository on the
+# fullsend/scaffold-install branch; repository owners merge on their own
+# schedule and no ruleset bypass is needed. A re-run updates the open PR.
 #
 # Required setup:
 #   1. Set repository variable SYNC_CLIENT_ID to the fullsend-ai-sync App Client ID.
 #   2. Set repository secret SYNC_PRIVATE_KEY to the App's PEM private key.
-#   3. The App must be installed on all target repos with contents:write.
-#   4. The App must be a bypass actor on each repo's branch ruleset.
+#   3. The App must be installed on all target repos with contents and
+#      pull-requests write, plus actions variables and secrets write.
 name: Sync Scaffold
 
 on:
-  repository_dispatch:
-    types: [fullsend-updated]
-  workflow_dispatch: {}
+  release:
+    types: [published]
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: Preview only; write nothing to the repositories
+        type: boolean
+        default: true
+      repos:
+        description: Optional space-separated owner/repo selectors (default all)
+        type: string
+        default: ""
 
 permissions: {}
 
@@ -26,6 +42,7 @@ jobs:
   sync:
     if: github.repository_owner == 'fullsend-ai'
     runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
@@ -53,5 +70,26 @@ jobs:
       - name: Converge per-repo installs
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+          REPOS: ${{ inputs.repos }}
         run: |
-          fullsend repos install -f repos.yaml --direct --force
+          set -euo pipefail
+          if ! printf '%s' "$REPOS" | grep -Eq '^[A-Za-z0-9_./* -]*$'; then
+            echo "repos input may only contain owner/repo selectors" >&2
+            exit 1
+          fi
+          args=(repos install -f repos.yaml --signoff=false)
+          if [ "$DRY_RUN" = "true" ]; then
+            args+=(--dry-run)
+          fi
+          # shellcheck disable=SC2086
+          fullsend "${args[@]}" $REPOS 2>&1 | tee sync.log
+          {
+            echo '## Sync Scaffold'
+            echo
+            echo "Mode: $([ "$DRY_RUN" = "true" ] && echo dry-run || echo apply)"
+            echo
+            echo '```'
+            tail -n 60 sync.log
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
