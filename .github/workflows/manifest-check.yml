@@ -68,7 +68,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -o pipefail
-          fullsend repos install -f repos.yaml --dry-run --signoff=false 2>&1 | tee dryrun.log || true
+          fullsend repos install -f repos.yaml --dry-run 2>&1 | tee dryrun.log || true
           {
             echo '## repos install --dry-run'
             echo

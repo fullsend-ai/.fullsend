@@ -80,7 +80,7 @@ jobs:
             echo "repos input may only contain owner/repo selectors" >&2
             exit 1
           fi
-          args=(repos install -f repos.yaml --signoff=false)
+          args=(repos install -f repos.yaml)
           if [ "$DRY_RUN" = "true" ]; then
             args+=(--dry-run)
           fi
