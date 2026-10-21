@@ -228,6 +228,9 @@ github:
                 wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-pi-inference-gate
         # --- agent repositories transferred from opendatahub-io, 2026-10-16 ---
         - name: fullsend-ai/epic-creator
+          config:
+            agents:
+                - source: epic-creator/epic-creator.yaml
         - name: fullsend-ai/strat-creator
         - name: fullsend-ai/assess-rfe
         - name: fullsend-ai/agent-eval-harness
