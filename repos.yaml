@@ -247,3 +247,5 @@ github:
                 - source: test-plan/test-plan-dry-run.yaml
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/fullsend-ai/test-creator/
+        # org-level repository (profile and org-wide workflows); fleet defaults.
+        - name: fullsend-ai/.github
