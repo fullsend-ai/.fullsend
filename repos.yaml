@@ -7,10 +7,9 @@
 # here (the manifest-check workflow runs `repos status` and a dry run on it) and
 # are applied by sync-scaffold on each fullsend release, weekly, or by hand.
 #
-# defaults.config is fullsend-ai/fullsend's own configuration, as proposed by
-# `fullsend repos status`, minus the three parts that stay on the entries that
-# use them: the QualityFlow agent source, its allowed_remote_resources prefix
-# and the org-wide create_issues target.
+# defaults.config holds the shared per-repo configuration. The QualityFlow
+# agent source and its allowed_remote_resources prefix stay on the entries
+# that use them.
 #
 # signoff is intentionally not set: the sync workflow runs under a GitHub App
 # installation token, whose identity cannot be resolved for a Signed-off-by
@@ -23,10 +22,10 @@ defaults:
         version: "1"
         runtime: claude
         roles:
-            - fullsend
             - triage
             - coder
             - review
+            - fix
             - retro
             - prioritize
         agents:
@@ -58,14 +57,13 @@ defaults:
               model: sonnet
         create_issues:
             allow_targets:
-                repos:
-                    - fullsend-ai/fullsend
+                orgs:
+                    - fullsend-ai
         status_notifications:
             reaction:
                 start: enabled
                 completion: enabled
 github:
-    mint_url: https://mint.fullsend.sh
     fullsend_ref: main
     repos:
         # --- platform repositories ---
@@ -75,12 +73,6 @@ github:
                 - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/572ba470c8d1e539516620adcc92bbee1863a3a1/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
-            create_issues:
-                allow_targets:
-                    orgs:
-                        - fullsend-ai
-                    repos:
-                        - fullsend-ai/fullsend
         - name: fullsend-ai/agents
           config:
             models:
@@ -91,48 +83,15 @@ github:
                 - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/572ba470c8d1e539516620adcc92bbee1863a3a1/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
-            create_issues:
-                allow_targets:
-                    orgs:
-                        - fullsend-ai
-                    repos:
-                        - fullsend-ai/fullsend
         # experiments dropped the QualityFlow harness (fullsend-ai/experiments#63): the
         # pinned source no longer resolves, so it runs the fleet default agents only.
         - name: fullsend-ai/experiments
-          config:
-            create_issues:
-                allow_targets:
-                    orgs:
-                        - fullsend-ai
-                    repos:
-                        - fullsend-ai/fullsend
         - name: fullsend-ai/metrics
-          config:
-            roles:
-                - triage
-                - coder
-                - review
-                - fix
-                - retro
-                - prioritize
-            create_issues:
-                allow_targets:
-                    repos:
-                        - fullsend-ai/metrics
-                        - fullsend-ai/fullsend
         # --- pi extension repositories: pi runtime, Grok triage/review, dev GCP project.
         # They inherit the fleet review subagents; retro stays enabled here on purpose.
         - name: fullsend-ai/pi-anthropic-vertex
           config:
             runtime: pi
-            roles:
-                - triage
-                - coder
-                - review
-                - fix
-                - retro
-                - prioritize
             agents:
                 - name: triage
                   model: xai-vertex/xai/grok-4.6
@@ -153,25 +112,12 @@ github:
             models:
                 aliases:
                     sonnet: claude-sonnet-5
-            create_issues:
-                allow_targets:
-                    repos:
-                        - fullsend-ai/pi-anthropic-vertex
-                        - fullsend-ai/fullsend
-            mint_url: https://mint.fullsend.sh
             inference:
                 project: it-gcp-konflux-dev-fullsend
                 wif_provider: projects/855403973659/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-pi-anthropic-vert
         - name: fullsend-ai/pi-xai-vertex
           config:
             runtime: pi
-            roles:
-                - triage
-                - coder
-                - review
-                - fix
-                - retro
-                - prioritize
             agents:
                 - name: triage
                   model: xai-vertex/xai/grok-4.6
@@ -192,20 +138,9 @@ github:
             models:
                 aliases:
                     sonnet: claude-sonnet-5
-            create_issues:
-                allow_targets:
-                    repos:
-                        - fullsend-ai/pi-xai-vertex
-                        - fullsend-ai/fullsend
-            mint_url: https://mint.fullsend.sh
             inference:
                 project: it-gcp-konflux-dev-fullsend
                 wif_provider: projects/855403973659/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-pi-xai-vertex
-        # pi-inference-gateway carried a .fullsend/config.base.yaml copy of fullsend's
-        # config (0f22284c, 2026-10-09). Its deltas over defaults.config are declared
-        # here instead and the base file is removed in the adoption PR, because a
-        # remote config_base fails to load in whole-manifest runs
-        # (fullsend-ai/fullsend#8516).
         - name: fullsend-ai/pi-inference-gateway
           config:
             models:
@@ -216,13 +151,6 @@ github:
                 - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/572ba470c8d1e539516620adcc92bbee1863a3a1/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
-            # The overlay's create_issues replaced the base's org-wide target, so the
-            # effective allow-list today is these two repositories; kept as is.
-            create_issues:
-                allow_targets:
-                    repos:
-                        - fullsend-ai/pi-inference-gateway
-                        - fullsend-ai/fullsend
             inference:
                 project: it-gcp-konflux-prod-fullsend
                 wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-pi-inference-gate
@@ -238,12 +166,8 @@ github:
           config:
             agents:
                 - source: rfe-creator/rfe-creator.yaml
-            allowed_remote_resources:
-                - https://raw.githubusercontent.com/fullsend-ai/rfe-creator/
         - name: fullsend-ai/test-creator
           config:
             agents:
                 - source: test-plan/test-plan.yaml
                 - source: test-plan/test-plan-dry-run.yaml
-            allowed_remote_resources:
-                - https://raw.githubusercontent.com/fullsend-ai/test-creator/
