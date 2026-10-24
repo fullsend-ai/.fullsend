@@ -21,13 +21,6 @@ defaults:
     config:
         version: "1"
         runtime: claude
-        roles:
-            - triage
-            - coder
-            - review
-            - fix
-            - retro
-            - prioritize
         agents:
             - name: code
               runtime: claude
