@@ -16,9 +16,10 @@ and [ADR 0122](https://github.com/fullsend-ai/fullsend/blob/main/docs/ADRs/0122-
    both to the job summary. Read them before merging.
 2. **Merge.** Nothing is pushed to any repository at merge time.
 3. **Sync Scaffold applies the manifest** on every fullsend release, weekly,
-   and on manual dispatch (dry-run by default). It opens or updates one pull
-   request per drifted repository on the `fullsend/scaffold-install` branch.
-   Repository owners merge those on their own schedule.
+   and on manual dispatch (dry-run by default). Apply runs push drift fixes
+   directly to each listed repository's default branch using the sync App;
+   manual dry runs preview the changes without writing. These pushes bypass
+   per-repository PR gates, so review the manifest plan before merging.
 
 Repositories not listed in `repos.yaml` are never touched. A listed
 repository's `.fullsend/config.yaml` is owned by the manifest: it begins with
