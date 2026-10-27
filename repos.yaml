@@ -86,6 +86,11 @@ github:
         # experiments dropped the QualityFlow harness (fullsend-ai/experiments#63): the
         # pinned source no longer resolves, so it runs the fleet default agents only.
         - name: fullsend-ai/experiments
+        - name: fullsend-ai/org
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-org
         - name: fullsend-ai/metrics
         # --- pi extension repositories: pi runtime, Grok triage/review, dev GCP project.
         # They inherit the fleet review subagents; retro stays enabled here on purpose.
