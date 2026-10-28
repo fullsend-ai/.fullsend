@@ -194,3 +194,21 @@ github:
             agents:
                 - source: test-plan/test-plan.yaml
                 - source: test-plan/test-plan-dry-run.yaml
+        - name: fullsend-ai/mlflow-assessments
+          config:
+            roles: [coder]
+            agents:
+                - name: code
+                  enabled: false
+                - name: fix
+                  enabled: false
+                - name: prioritize
+                  enabled: false
+                - name: review
+                  enabled: false
+                - name: retro
+                  enabled: false
+                - name: triage
+                  enabled: false
+                - source: harness/llm-judge.yaml
+                - source: harness/llm-judge-triage.yaml
