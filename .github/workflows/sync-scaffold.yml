@@ -76,7 +76,8 @@ jobs:
           REPOS: ${{ inputs.repos }}
         run: |
           set -euo pipefail
-          if ! printf '%s' "$REPOS" | grep -Eq '^[A-Za-z0-9_./* -]*$'; then
+          # An empty selector means every repository in the manifest.
+          if [[ -n "$REPOS" ]] && ! printf '%s' "$REPOS" | grep -Eq '^[A-Za-z0-9_./* -]*$'; then
             echo "repos input may only contain owner/repo selectors" >&2
             exit 1
           fi
