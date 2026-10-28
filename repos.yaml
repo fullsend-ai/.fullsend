@@ -71,6 +71,16 @@ github:
           config:
             agents:
                 - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/572ba470c8d1e539516620adcc92bbee1863a3a1/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
+                # Retro runs only on a human's /fs-retro comment; closing or
+                # merging a pull request does not start one (fleet default
+                # keeps retro off, see defaults.config above).
+                - name: retro
+                  enabled: true
+                  trigger: >-
+                    event.transition.kind == "comment_added"
+                    && has(event.transition.comment.command)
+                    && event.transition.comment.command == "/fs-retro"
+                    && event.actor.kind == "human"
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
         - name: fullsend-ai/agents
@@ -81,6 +91,16 @@ github:
                     sonnet: claude-sonnet-5-5
             agents:
                 - source: https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/572ba470c8d1e539516620adcc92bbee1863a3a1/harness/qualityflow.yaml#sha256=c0a51b2f75172aebd577fd38c8012a7c566a84f84812ebd9aa4cc07ad3b2220e
+                # Retro runs only on a human's /fs-retro comment; closing or
+                # merging a pull request does not start one (fleet default
+                # keeps retro off, see defaults.config above).
+                - name: retro
+                  enabled: true
+                  trigger: >-
+                    event.transition.kind == "comment_added"
+                    && has(event.transition.comment.command)
+                    && event.transition.comment.command == "/fs-retro"
+                    && event.actor.kind == "human"
             allowed_remote_resources:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
         # experiments dropped the QualityFlow harness (fullsend-ai/experiments#63): the
