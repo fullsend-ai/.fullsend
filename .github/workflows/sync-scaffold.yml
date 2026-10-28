@@ -7,15 +7,15 @@
 # a dry-run option). Builds the fullsend CLI from the fullsend main branch,
 # which is also what github.fullsend_ref in repos.yaml points the shims at.
 #
-# Delivery is one pull request per drifted repository on the
-# fullsend/scaffold-install branch; repository owners merge on their own
-# schedule and no ruleset bypass is needed. A re-run updates the open PR.
+# Apply runs push drift fixes directly to each repository's default branch.
+# Manual dry runs preview the same direct delivery without writing.
 #
 # Required setup:
 #   1. Set repository variable SYNC_CLIENT_ID to the fullsend-ai-sync App Client ID.
 #   2. Set repository secret SYNC_PRIVATE_KEY to the App's PEM private key.
 #   3. The App must be installed on all target repos with contents and
-#      pull-requests write, plus actions variables and secrets write.
+#      workflows write, plus actions variables and secrets write.
+#   4. The App must be allowed to push to each default branch by its rulesets.
 name: Sync Scaffold
 
 on:
@@ -80,7 +80,7 @@ jobs:
             echo "repos input may only contain owner/repo selectors" >&2
             exit 1
           fi
-          args=(repos install -f repos.yaml)
+          args=(repos install -f repos.yaml --direct)
           if [ "$DRY_RUN" = "true" ]; then
             args+=(--dry-run)
           fi
@@ -89,7 +89,7 @@ jobs:
           {
             echo '## Sync Scaffold'
             echo
-            echo "Mode: $([ "$DRY_RUN" = "true" ] && echo dry-run || echo apply)"
+            echo "Mode: $([ "$DRY_RUN" = "true" ] && echo 'dry-run (direct preview)' || echo 'apply (direct)')"
             echo
             echo '```'
             tail -n 60 sync.log
