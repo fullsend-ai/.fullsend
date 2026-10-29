@@ -189,6 +189,7 @@ github:
           config:
             agents:
                 - source: rfe-creator/rfe-creator.yaml
+                - source: rfe-creator/rfe-creator-eval.yaml
         - name: fullsend-ai/test-creator
           config:
             agents:
