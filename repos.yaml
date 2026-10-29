@@ -98,7 +98,25 @@ github:
                 - https://raw.githubusercontent.com/redhat-community-ai-tools/qualityflow-fullsend/
         # experiments dropped the QualityFlow harness (fullsend-ai/experiments#63): the
         # pinned source no longer resolves, so it runs the fleet default agents only.
+        #
+        # Inference gateway canary: the review agent's correctness and security
+        # subagents reach gpt-6.1-sol through the fleet inference gateway with the
+        # job's GitHub OIDC token, instead of the OpenAI key secret. Subagents merge
+        # per key, so the other review subagents stay on the fleet defaults.
         - name: fullsend-ai/experiments
+          config:
+            inference:
+                gateway:
+                    url: https://fullsend-inference-gateway-155031062349.us-central1.run.app
+                    audience: fullsend-inference-gateway
+                    models:
+                        gpt-6.1-sol:
+                            api: openai-responses
+            agents:
+                - name: review
+                  subagents:
+                    correctness: gateway/gpt-6.1-sol
+                    security: gateway/gpt-6.1-sol
         - name: fullsend-ai/org
           config:
             inference:
