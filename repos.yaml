@@ -211,7 +211,7 @@ github:
             roles: [coder]
             agents:
                 - name: code
-                  enabled: false
+                  enabled: true
                 - name: fix
                   enabled: false
                 - name: prioritize
@@ -221,6 +221,6 @@ github:
                 - name: retro
                   enabled: false
                 - name: triage
-                  enabled: false
+                  enabled: true
                 - source: harness/llm-judge.yaml
                 - source: harness/llm-judge-triage.yaml
