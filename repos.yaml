@@ -212,6 +212,7 @@ github:
             agents:
                 - name: code
                   enabled: true
+                  model: opus
                 - name: fix
                   enabled: false
                 - name: prioritize
@@ -222,5 +223,6 @@ github:
                   enabled: false
                 - name: triage
                   enabled: true
+                  model: sonnet
                 - source: harness/llm-judge.yaml
                 - source: harness/llm-judge-triage.yaml
