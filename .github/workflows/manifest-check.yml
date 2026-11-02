@@ -1,77 +1,123 @@
-# Plan step for manifest changes: on every pull request that touches
-# repos.yaml, run `fullsend repos status` and `fullsend repos install --dry-run`
-# with the CLI built from fullsend main and post both to the job summary.
-#
-# The check is informational (continue-on-error): repositories whose
-# .fullsend/config.yaml still lacks the managed marker make the dry run exit 1
-# until they are adopted, and that must not block the manifest edit that
-# describes them.
 name: Manifest Check
 
+# Always report the required check, including on unrelated PRs and merge groups.
 on:
   pull_request:
-    paths:
-      - repos.yaml
-      - .github/workflows/manifest-check.yml
+  push:
+    branches: [main]
+  merge_group:
+  workflow_dispatch:
 
-permissions: {}
+permissions:
+  contents: read
 
 concurrency:
-  group: manifest-check-${{ github.event.pull_request.number }}
+  group: manifest-check-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  plan:
-    if: github.repository_owner == 'fullsend-ai'
+  validate-manifest:
+    name: validate-manifest
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+
+      - name: Build pinned installer and validator; run regression tests
+        run: |
+          bash hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
+          echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
+
+      - name: Validate the complete fleet manifest
+        run: |
+          set -euo pipefail
+          validate-manifest repos.yaml 2>&1 | tee validation.log
+
+      - name: Publish validation result
+        if: always()
+        run: |
+          {
+            echo '## Required manifest validation'
+            echo
+            echo "Fullsend revision: $(cat fullsend-cli-revision)"
+            echo '```'
+            if [[ -f validation.log ]]; then cat validation.log; else echo 'Build or regression tests failed before validation.'; fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  plan:
+    name: advisory-plan
+    needs: validate-manifest
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      # Privileged previews execute tooling from the reviewed base branch.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          path: trusted
+          persist-credentials: false
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          path: candidate
+          persist-credentials: false
+
+      - name: Check whether the proposed CLI revision is already trusted
+        id: reviewed
+        run: |
+          if [[ -f trusted/fullsend-cli-revision ]] && cmp -s trusted/fullsend-cli-revision candidate/fullsend-cli-revision; then
+            echo 'preview=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'CLI pin changes receive strict validation; run a manual Sync Scaffold dry run after merge for the privileged preview.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Build reviewed CLI
+        if: steps.reviewed.outputs.preview == 'true'
+        run: |
+          bash trusted/hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
+          echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
+        if: steps.reviewed.outputs.preview == 'true'
         id: app-token
         with:
           client-id: ${{ vars.SYNC_CLIENT_ID }}
           private-key: ${{ secrets.SYNC_PRIVATE_KEY }}
           owner: fullsend-ai
 
-      - name: Build fullsend CLI
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          dir=$(mktemp -d)
-          git clone --depth 1 \
-            "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/fullsend.git" \
-            "$dir"
-          cd "$dir"
-          go build -o /usr/local/bin/fullsend ./cmd/fullsend
-          echo "Built fullsend from $(git rev-parse --short HEAD)"
-
-      - name: repos status
+      # Adoption/drift failures remain advisory; invalid manifests fail the
+      # separate required job before any fleet credential is requested.
+      - name: Advisory repos status
+        if: steps.reviewed.outputs.preview == 'true'
         continue-on-error: true
+        working-directory: candidate
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -o pipefail
           fullsend repos status -f repos.yaml 2>&1 | tee status.log || true
           {
-            echo '## repos status'
-            echo
+            echo '## Advisory repos status'
             echo '```'
             cat status.log
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: repos install --dry-run
+      - name: Advisory repos install --dry-run
+        if: steps.reviewed.outputs.preview == 'true'
         continue-on-error: true
+        working-directory: candidate
         env:
           GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -o pipefail
           fullsend repos install -f repos.yaml --dry-run 2>&1 | tee dryrun.log || true
           {
-            echo '## repos install --dry-run'
-            echo
+            echo '## Advisory repos install --dry-run'
             echo '```'
             cat dryrun.log
             echo '```'

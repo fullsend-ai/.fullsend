@@ -4,8 +4,10 @@
 # Runs when fullsend-ai/fullsend publishes a release (its notify-scaffold-sync
 # workflow dispatches fullsend-updated here; a release event of another
 # repository cannot trigger this workflow directly), weekly, and by hand (with
-# a dry-run option). Builds the fullsend CLI from the fullsend main branch,
-# which is also what github.fullsend_ref in repos.yaml points the shims at.
+# a dry-run option). Builds the installer from fullsend-cli-revision, the
+# same reviewed revision used by required manifest validation. The manifest's
+# github.fullsend_ref independently controls remote scaffold templates and
+# the shims' runtime reference.
 #
 # Apply runs push drift fixes directly to each repository's default branch.
 # Manual dry runs preview the same direct delivery without writing.
@@ -49,6 +51,15 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           ref: main
+          persist-credentials: false
+
+      - name: Build pinned installer and validator; run regression tests
+        run: |
+          bash hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
+          echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
+
+      - name: Validate the complete fleet manifest before requesting credentials
+        run: validate-manifest repos.yaml
 
       - uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3
         id: app-token
@@ -56,18 +67,6 @@ jobs:
           client-id: ${{ vars.SYNC_CLIENT_ID }}
           private-key: ${{ secrets.SYNC_PRIVATE_KEY }}
           owner: fullsend-ai
-
-      - name: Build fullsend CLI
-        env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-        run: |
-          dir=$(mktemp -d)
-          git clone --depth 1 \
-            "https://x-access-token:${GH_TOKEN}@github.com/fullsend-ai/fullsend.git" \
-            "$dir"
-          cd "$dir"
-          go build -o /usr/local/bin/fullsend ./cmd/fullsend
-          echo "Built fullsend from $(git rev-parse --short HEAD)"
 
       - name: Converge per-repo installs
         env:
