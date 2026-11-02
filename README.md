@@ -56,36 +56,22 @@ directly. It contains no duplicate validation rules. Tests cover the #209
 enablement-only failure, the #210 correction, and invalid entries elsewhere
 in the manifest. Sync repeats this check before requesting fleet credentials.
 
-## Activate the required merge check
+## Require the merge check through organization governance
 
-**Merging the workflow does not require the check in GitHub.** A repository
-administrator must activate that setting after the first successful
-`validate-manifest` run on `main`. Until then, the job can fail while a PR
-remains mergeable.
+The required check is managed centrally in
+[`fullsend-ai/org/repos/.fullsend.yml`](https://github.com/fullsend-ai/org/blob/main/repos/.fullsend.yml),
+which owns this repository's existing `main` ruleset. The companion
+[org PR #37](https://github.com/fullsend-ai/org/pull/37) adds `validate-manifest`
+from GitHub Actions and requires an up-to-date branch while preserving the
+existing rules. Do not create a separate manually managed ruleset here.
 
-The reviewed policy is in `.github/manifest-validation-ruleset.json`. It adds
-a separate active ruleset for the default branch, requires `validate-manifest`
-from the GitHub Actions app, requires an up-to-date branch, and grants no
-bypasses. It does not replace existing organization or repository rulesets.
-
-An administrator can review and activate it with:
-
-```sh
-gh auth status
-gh api repos/fullsend-ai/.fullsend/rulesets --jq '.[] | {id, name, source}'
-cat .github/manifest-validation-ruleset.json
-# Create once, after confirming that a repository-owned rule with this name
-# does not already exist. This is a live GitHub administration change.
-gh api --method POST repos/fullsend-ai/.fullsend/rulesets \
-  --input .github/manifest-validation-ruleset.json
-# Read back the effective rules and confirm the required check is present.
-gh api repos/fullsend-ai/.fullsend/rules/branches/main
-```
-
-If `manifest-validation` already exists, inspect it rather than creating
-another copy or overwriting it. Source control reviews the proposed policy;
-GitHub's live ruleset supplies enforcement. Require `validate-manifest`, not
-the advisory preview job. See the [GitHub rulesets API](https://docs.github.com/en/rest/repos/rules).
+Merge [the validator PR #211](https://github.com/fullsend-ai/.fullsend/pull/211)
+first and confirm `validate-manifest` succeeds on `main`. Then merge the
+companion org PR after reviewing its safe-settings dry-run output for
+unexpected changes. The normal safe-settings apply activates the rule;
+confirm the effective default-branch rules require `validate-manifest` after
+that apply succeeds. Merging the validator workflow alone does not make the
+check mandatory. The advisory preview is not a required check.
 
 ## Other automations in this repository
 
