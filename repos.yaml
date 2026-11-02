@@ -188,6 +188,7 @@ github:
           config:
             agents:
                 - source: epic-creator/epic-creator.yaml
+                - source: epic-creator/epic-creator-eval.yaml
         - name: fullsend-ai/strat-creator
           config:
             agents:
