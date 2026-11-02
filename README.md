@@ -40,10 +40,14 @@ Reference: [Repo Management guide](https://github.com/fullsend-ai/fullsend/blob/
 
 `fullsend-cli-revision` pins the full commit SHA used to build both the
 validator and the Sync Scaffold installer. Update it in a PR to adopt new
-installer or scaffold-template changes. Release notifications still request a
-sync, but they use this reviewed revision rather than building a moving
-`main`. The manifest's `github.fullsend_ref` independently controls the
-reference embedded in runtime shims; this change does not pin agent runtimes.
+CLI implementation or embedded-template fallback changes. Release
+notifications still request a sync using this reviewed CLI revision.
+
+Remote scaffold templates and runtime references follow the manifest's
+`github.fullsend_ref`, currently `main`. They can advance without a CLI-pin
+update. If a remote GitHub scaffold fetch fails, the installer can fall back
+to the embedded templates from the pinned CLI. The CLI pin therefore does
+not pin remote scaffold templates or agent runtimes.
 
 `hack/build-fullsend.sh OUTPUT_DIRECTORY` builds both commands and runs the
 regression tests. The small validation command is copied into the pinned

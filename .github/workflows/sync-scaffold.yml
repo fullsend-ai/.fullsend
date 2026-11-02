@@ -6,7 +6,8 @@
 # repository cannot trigger this workflow directly), weekly, and by hand (with
 # a dry-run option). Builds the installer from fullsend-cli-revision, the
 # same reviewed revision used by required manifest validation. The manifest's
-# github.fullsend_ref independently controls the shims' runtime reference.
+# github.fullsend_ref independently controls remote scaffold templates and
+# the shims' runtime reference.
 #
 # Apply runs push drift fixes directly to each repository's default branch.
 # Manual dry runs preview the same direct delivery without writing.
