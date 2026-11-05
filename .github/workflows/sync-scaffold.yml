@@ -4,10 +4,9 @@
 # Runs when fullsend-ai/fullsend publishes a release (its notify-scaffold-sync
 # workflow dispatches fullsend-updated here; a release event of another
 # repository cannot trigger this workflow directly), weekly, and by hand (with
-# a dry-run option). Builds the installer from fullsend-cli-revision, the
-# same reviewed revision used by required manifest validation. The manifest's
-# github.fullsend_ref independently controls remote scaffold templates and
-# the shims' runtime reference.
+# a dry-run option). The installer and validator are built from the ref in
+# github.fullsend_ref, resolved once to a commit SHA. Installed workflow refs
+# retain the configured value, so branch refs such as main keep tracking merges.
 #
 # Apply runs push drift fixes directly to each repository's default branch.
 # Manual dry runs preview the same direct delivery without writing.
@@ -53,10 +52,12 @@ jobs:
           ref: main
           persist-credentials: false
 
-      - name: Build pinned installer and validator; run regression tests
+      - name: Build installer and validator from manifest ref; run regression tests
         run: |
+          set -euo pipefail
           bash hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
           echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/fullsend-bin:$PATH"
 
       - name: Validate the complete fleet manifest before requesting credentials
         run: validate-manifest repos.yaml
@@ -86,12 +87,24 @@ jobs:
           fi
           # shellcheck disable=SC2086
           fullsend "${args[@]}" $REPOS 2>&1 | tee sync.log
+
+      - name: Publish Sync Scaffold summary
+        if: always()
+        env:
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run }}
+        run: |
+          set -euo pipefail
           {
             echo '## Sync Scaffold'
             echo
             echo "Mode: $([ "$DRY_RUN" = "true" ] && echo 'dry-run (direct preview)' || echo 'apply (direct)')"
+            if [[ -f "$RUNNER_TEMP/fullsend-bin/fullsend-source-ref" && -f "$RUNNER_TEMP/fullsend-bin/fullsend-source-revision" ]]; then
+              echo "Fullsend source: $(cat "$RUNNER_TEMP/fullsend-bin/fullsend-source-ref") -> $(cat "$RUNNER_TEMP/fullsend-bin/fullsend-source-revision")"
+            else
+              echo 'Fullsend source ref and revision are unavailable; source resolution or build failed.'
+            fi
             echo
             echo '```'
-            tail -n 60 sync.log
+            if [[ -f sync.log ]]; then tail -n 60 sync.log; else echo 'Sync did not start.'; fi
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
