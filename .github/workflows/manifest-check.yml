@@ -25,10 +25,12 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Build pinned installer and validator; run regression tests
+      - name: Build installer and validator from manifest ref; run regression tests
         run: |
+          set -euo pipefail
           bash hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
           echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
+          export PATH="$RUNNER_TEMP/fullsend-bin:$PATH"
 
       - name: Validate the complete fleet manifest
         run: |
@@ -41,7 +43,12 @@ jobs:
           {
             echo '## Required manifest validation'
             echo
-            echo "Fullsend revision: $(cat fullsend-cli-revision)"
+            if [[ -f "$RUNNER_TEMP/fullsend-bin/fullsend-source-ref" && -f "$RUNNER_TEMP/fullsend-bin/fullsend-source-revision" ]]; then
+              echo "Configured Fullsend ref: $(cat "$RUNNER_TEMP/fullsend-bin/fullsend-source-ref")"
+              echo "Resolved Fullsend revision: $(cat "$RUNNER_TEMP/fullsend-bin/fullsend-source-revision")"
+            else
+              echo 'Fullsend source resolution failed before build completed.'
+            fi
             echo '```'
             if [[ -f validation.log ]]; then cat validation.log; else echo 'Build or regression tests failed before validation.'; fi
             echo '```'
@@ -66,18 +73,37 @@ jobs:
           path: candidate
           persist-credentials: false
 
-      - name: Check whether the proposed CLI revision is already trusted
+      - name: Check whether all proposed Fullsend refs match the trusted manifest
         id: reviewed
         run: |
-          if [[ -f trusted/fullsend-cli-revision ]] && cmp -s trusted/fullsend-cli-revision candidate/fullsend-cli-revision; then
+          set -euo pipefail
+          manifest_refs() {
+            ruby -ryaml -e '
+              manifest = YAML.safe_load_file(ARGV.fetch(0), aliases: true)
+              refs = []
+              %w[github gitlab].each do |platform|
+                section = manifest.is_a?(Hash) && manifest[platform].is_a?(Hash) ? manifest[platform] : {}
+                refs << "#{platform}.fullsend_ref=#{section.fetch("fullsend_ref", "")}"
+                Array(section["repos"]).each do |entry|
+                  next unless entry.is_a?(Hash) && entry.key?("fullsend_ref")
+                  refs << "#{platform}.repos[#{entry.fetch("name", "")}].fullsend_ref=#{entry["fullsend_ref"]}"
+                end
+              end
+              puts refs.sort
+            ' "$1"
+          }
+          trusted_refs=$(manifest_refs trusted/repos.yaml)
+          candidate_refs=$(manifest_refs candidate/repos.yaml)
+          if [[ "$trusted_refs" == "$candidate_refs" ]]; then
             echo 'preview=true' >> "$GITHUB_OUTPUT"
           else
-            echo 'CLI pin changes receive strict validation; run a manual Sync Scaffold dry run after merge for the privileged preview.' >> "$GITHUB_STEP_SUMMARY"
+            echo 'Fullsend ref changes receive strict validation; run a manual Sync Scaffold dry run after merge for the privileged preview.' >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Build reviewed CLI
+      - name: Build trusted CLI from the reviewed base
         if: steps.reviewed.outputs.preview == 'true'
         run: |
+          set -euo pipefail
           bash trusted/hack/build-fullsend.sh "$RUNNER_TEMP/fullsend-bin"
           echo "$RUNNER_TEMP/fullsend-bin" >> "$GITHUB_PATH"
 

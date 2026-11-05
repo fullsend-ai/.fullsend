@@ -17,10 +17,11 @@ and [ADR 0122](https://github.com/fullsend-ai/fullsend/blob/main/docs/ADRs/0122-
    Invalid manifests fail the job; validation does not contact the fleet or
    request the sync App's credentials.
    A separate advisory job reports `repos status` and `repos install --dry-run`
-   for internal PRs whose CLI pin is unchanged. Adoption and drift errors in
-   that preview remain informational. Privileged previews execute tooling from
-   the reviewed base branch, not proposed PR scripts. CLI pin changes require
-   a manual Sync Scaffold dry run after merge for a privileged preview.
+   for internal PRs whose Fullsend refs are unchanged. Adoption and drift errors
+   in that preview remain informational. Privileged previews use tooling from
+   the reviewed base branch, not proposed PR scripts. A PR that changes a
+   Fullsend ref receives strict manifest validation but skips the privileged
+   preview; run a manual Sync Scaffold dry run after merge to review it.
 2. **Merge.** Nothing is pushed to any repository at merge time.
 3. **Sync Scaffold applies the manifest** on every fullsend release, weekly,
    and on manual dispatch (dry-run by default). Apply runs push drift fixes
@@ -36,25 +37,31 @@ manifest, not the file.
 Reference: [Repo Management guide](https://github.com/fullsend-ai/fullsend/blob/main/docs/guides/getting-started/repo-management.md),
 [`fullsend repos` CLI](https://github.com/fullsend-ai/fullsend/blob/main/docs/cli/repos.md).
 
-## Reviewed CLI revision
+## Fullsend source revision
 
-`fullsend-cli-revision` pins the full commit SHA used to build both the
-validator and the Sync Scaffold installer. Update it in a PR to adopt new
-CLI implementation or embedded-template fallback changes. Release
-notifications still request a sync using this reviewed CLI revision.
+`github.fullsend_ref` in `repos.yaml` is the source for both the Fullsend CLI
+used by Manifest Check and Sync Scaffold and the scaffold/runtime refs installed
+in managed repositories. `hack/build-fullsend.sh` reads that ref, fetches it
+once, resolves it to a commit SHA, and builds the installer and validator from
+that exact commit. Each workflow records the configured ref and resolved SHA.
+The installed workflow refs keep the configured manifest value. With the
+current `main` setting, later agent runs continue to follow merged Fullsend
+changes without waiting for another scaffold sync. Explicit per-repository ref
+overrides remain in effect.
 
-Remote scaffold templates and runtime references follow the manifest's
-`github.fullsend_ref`, currently `main`. They can advance without a CLI-pin
-update. If a remote GitHub scaffold fetch fails, the installer can fall back
-to the embedded templates from the pinned CLI. The CLI pin therefore does
-not pin remote scaffold templates or agent runtimes.
+Manifest Check validates a proposed ref in a read-only job without the sync App
+credentials. Its privileged advisory preview uses the reviewed base branch and
+runs only when all candidate Fullsend refs match the base manifest. A ref change
+therefore cannot cause proposed Fullsend code to run with fleet credentials.
+After merging a ref change, run Sync Scaffold manually in dry-run mode to review
+the plan.
 
-`hack/build-fullsend.sh OUTPUT_DIRECTORY` builds both commands and runs the
-regression tests. The small validation command is copied into the pinned
-Fullsend checkout to call `internal/repos.LoadManifest` and `Manifest.Validate`
-directly. It contains no duplicate validation rules. Tests cover the #209
-enablement-only failure, the #210 correction, and invalid entries elsewhere
-in the manifest. Sync repeats this check before requesting fleet credentials.
+`hack/build-fullsend.sh OUTPUT_DIRECTORY` requires Ruby's standard YAML library,
+Git, and Go. It runs the validator package's regression tests, then builds both
+commands from the resolved Fullsend commit. The small validation command is
+copied into that checkout to call `internal/repos.LoadManifest` and
+`Manifest.Validate` directly; it contains no duplicate validation rules. Sync
+repeats manifest validation before requesting fleet credentials.
 
 ## Require the merge check through organization governance
 
