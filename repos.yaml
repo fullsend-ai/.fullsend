@@ -116,6 +116,11 @@ github:
               project: it-gcp-konflux-prod-fullsend
               wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-org
         - name: fullsend-ai/metrics
+          config:
+            agents:
+                - name: fix-judge
+                  source: harness/fix-judge.yaml
+                  runtime: claude
         # --- pi extension repositories: pi runtime, Grok triage/review, dev GCP project.
         # They inherit the fleet review subagents; retro stays enabled here on purpose.
         - name: fullsend-ai/pi-anthropic-vertex
