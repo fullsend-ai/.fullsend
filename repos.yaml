@@ -190,6 +190,14 @@ github:
                 - source: epic-creator/epic-creator.yaml
                 - source: epic-creator/epic-creator-eval.yaml
         - name: fullsend-ai/epic-creator-eval
+          config:
+            models:
+                aliases:
+                    opus: claude-opus-5-5
+                    sonnet: claude-sonnet-5-5
+            inference:
+                project: it-gcp-konflux-prod-fullsend
+                wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-epic-creator-eval
         - name: fullsend-ai/strat-creator
           config:
             agents:
