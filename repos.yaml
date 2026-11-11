@@ -21,6 +21,17 @@ defaults:
     config:
         version: "1"
         runtime: claude
+        # The fleet inference gateway holds the OpenAI key; gateway/ models reach it
+        # with the job's GitHub OIDC token (ADR 0137). Its config and repo allowlist
+        # live in fullsend-ai/org inference-gateway/: a repository added here also
+        # needs an allowlist entry there, or its gateway/ subagents get 403.
+        inference:
+            gateway:
+                url: https://fullsend-inference-gateway-155031062349.us-central1.run.app
+                audience: fullsend-inference-gateway
+                models:
+                    gpt-6.1-sol:
+                        api: openai-responses
         agents:
             - name: code
               runtime: claude
@@ -35,11 +46,11 @@ defaults:
               model: sonnet
               subagents:
                 challenger: opus
-                correctness: openai/gpt-6.1-sol
+                correctness: gateway/gpt-6.1-sol
                 docs-currency: google-vertex/gemini-3.8-flash
                 intent-coherence: google-vertex/gemini-3.8-flash
                 risk-assessment: google-vertex/gemini-3.8-flash
-                security: openai/gpt-6.1-sol
+                security: gateway/gpt-6.1-sol
                 style-conventions: google-vertex/gemini-3.8-flash
             # Retro stays installed but disabled while duplicate findings are
             # reduced (fullsend-ai/agents#198, fullsend-ai/fullsend#7805).
@@ -182,6 +193,16 @@ github:
           config:
             agents:
                 - source: epic-creator/epic-creator.yaml
+                - source: epic-creator/epic-creator-eval.yaml
+        - name: fullsend-ai/epic-creator-eval
+          config:
+            models:
+                aliases:
+                    opus: claude-opus-5-5
+                    sonnet: claude-sonnet-5-5
+            inference:
+                project: it-gcp-konflux-prod-fullsend
+                wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-epic-creator-eval
         - name: fullsend-ai/strat-creator
           config:
             agents:
@@ -205,7 +226,8 @@ github:
             roles: [coder]
             agents:
                 - name: code
-                  enabled: false
+                  enabled: true
+                  model: opus
                 - name: fix
                   enabled: false
                 - name: prioritize
@@ -215,6 +237,7 @@ github:
                 - name: retro
                   enabled: false
                 - name: triage
-                  enabled: false
+                  enabled: true
+                  model: sonnet
                 - source: harness/llm-judge.yaml
                 - source: harness/llm-judge-triage.yaml
