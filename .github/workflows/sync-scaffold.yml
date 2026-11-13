@@ -81,6 +81,10 @@ jobs:
             echo "repos input may only contain owner/repo selectors" >&2
             exit 1
           fi
+          # This checkout is discarded after the run, so an edit that install
+          # writes to repos.yaml here is lost. With the file read-only,
+          # install names the edit instead, to be made in a pull request.
+          chmod a-w repos.yaml
           args=(repos install -f repos.yaml --direct)
           if [ "$DRY_RUN" = "true" ]; then
             args+=(--dry-run)
