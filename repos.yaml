@@ -241,3 +241,12 @@ github:
                   model: sonnet
                 - source: harness/llm-judge.yaml
                 - source: harness/llm-judge-triage.yaml
+        # --- github-emulator: GitHub API emulator for fullsend behaviour tests,
+        # transferred from jctanner/github-emulator 2026-11-15. Fleet defaults;
+        # repo-scoped WIF provider provisioned via `fullsend inference provision
+        # fullsend-ai/github-emulator --project it-gcp-konflux-prod-fullsend`. ---
+        - name: fullsend-ai/github-emulator
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-github-emulator
