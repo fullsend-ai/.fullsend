@@ -204,3 +204,61 @@ github:
             inference:
               project: it-gcp-konflux-prod-fullsend
               wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-github-emulator
+        - name: fullsend-ai/devlake
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-devlake
+        # --- coverport: e2e coverage collection tooling, transferred from
+        # konflux-ci/coverport 2026-11-19. Fleet defaults; repo-scoped WIF
+        # provider provisioned via `fullsend inference provision
+        # fullsend-ai/coverport --project it-gcp-konflux-prod-fullsend`. ---
+        - name: fullsend-ai/coverport
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-coverport
+        # --- OrgPulse upstream repositories, created 2026-11-20 and enrolled
+        # together (AISDLC-863). Fleet defaults; repo-scoped WIF providers
+        # provisioned via `fullsend inference provision <owner/repo>
+        # --project it-gcp-konflux-prod-fullsend`. ---
+        - name: fullsend-ai/metrics-executor
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-metrics-executor
+        - name: fullsend-ai/devlake-telemetry-sidecar
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-devlake-telemetry
+        - name: fullsend-ai/orgpulse
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-orgpulse
+        # --- Codecov forks (umbrella, gateway, gazebo, timescaledb), forked
+        # into fullsend-ai 2026-11-20. Fleet defaults; repo-scoped WIF
+        # providers provisioned via `fullsend inference provision <owner/repo>
+        # --project it-gcp-konflux-prod-fullsend` (timescaledb's provider id is
+        # truncated to the 32-character limit). ---
+        - name: fullsend-ai/codecov-umbrella
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-codecov-umbrella
+        - name: fullsend-ai/codecov-gateway
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-codecov-gateway
+        - name: fullsend-ai/codecov-gazebo
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-codecov-gazebo
+        - name: fullsend-ai/codecov-timescaledb
+          config:
+            inference:
+              project: it-gcp-konflux-prod-fullsend
+              wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-codecov-timescale
