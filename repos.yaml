@@ -193,8 +193,8 @@ github:
                 - name: triage
                   enabled: true
                   model: sonnet
-                - source: harness/llm-judge.yaml
-                - source: harness/llm-judge-triage.yaml
+                - source: harness/judge-review-correctly-approved.yaml
+                - source: harness/judge-triage-correctly-sent-to-code.yaml
         # --- github-emulator: GitHub API emulator for fullsend behaviour tests,
         # transferred from jctanner/github-emulator 2026-11-15. Fleet defaults;
         # repo-scoped WIF provider provisioned via `fullsend inference provision
