@@ -209,3 +209,9 @@ github:
             inference:
               project: it-gcp-konflux-prod-fullsend
               wif_provider: projects/155031062349/locations/global/workloadIdentityPools/fullsend-inference/providers/gh-fullsend-ai-devlake
+        # --- coverport: e2e coverage collection tooling, transferred from
+        # konflux-ci/coverport 2026-11-19. Fleet defaults; the repo-scoped WIF
+        # provider is provisioned separately (`fullsend inference provision
+        # fullsend-ai/coverport --project it-gcp-konflux-prod-fullsend`), after
+        # which this entry gains config.inference like github-emulator. ---
+        - name: fullsend-ai/coverport
